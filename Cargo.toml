@@ -6,7 +6,7 @@ description = "Datastructures and algorithms for nostd environments"
 license = "BSD-3-Clause"
 repository = "https://github.com/phughk/rust-nostd-structs"
 readme = "README.md"
-homepage = "https://github.com/phughk/rust-nostd-structs"
+homepage = "https://github.com/phughk/rust-nostd-structs/wiki"
 documentation = "https://docs.rs/nostd_structs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
