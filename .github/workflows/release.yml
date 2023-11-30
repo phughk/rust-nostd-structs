@@ -24,7 +24,7 @@ jobs:
 
     - name: Publish Crate
       run: |
-        cargo login ${{CRATESIO_API_TOKEN}}
+        cargo login ${{secrets.CRATESIO_API_TOKEN}}
         cargo publish --verbose
       env:
         CARGO_TERM_COLOR: always
