@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+
+    - name: Build and Test Release
+      run: |
+        cargo build --release --verbose
+        cargo test --release --verbose
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: release-artifact
+        path: target/release/nostd_structs
+
+    - name: Publish Crate
+      run: |
+        cargo publish --verbose
+      env:
+        CARGO_TERM_COLOR: always
+
