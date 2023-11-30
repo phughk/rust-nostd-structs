@@ -2,6 +2,8 @@
 name = "nostd_structs"
 version = "0.1.0"
 edition = "2021"
+description = "Datastructures and algorithms for nostd environments"
+license = "BSD-3-Clause"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
