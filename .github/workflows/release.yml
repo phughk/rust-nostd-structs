@@ -22,14 +22,9 @@ jobs:
         cargo build --release --verbose
         cargo test --release --verbose
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: release-artifact
-        path: target/release/nostd_structs
-
     - name: Publish Crate
       run: |
+        cargo login ${{CRATESIO_API_TOKEN}}
         cargo publish --verbose
       env:
         CARGO_TERM_COLOR: always
