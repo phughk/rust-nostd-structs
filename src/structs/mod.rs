@@ -1,9 +1,11 @@
+mod r_tree;
+
 /// A n-dimensional point that is used in the spatial data structures
 ///
 /// U is the base unit
 /// L is the larger unit in case of overflow
 /// S is the constant number of dimensions
-#[derive(PartialEq)]
+#[derive(PartialEq, Copy, Clone, Default)]
 #[cfg_attr(test, derive(Debug))]
 pub struct NDimensionalPoint<U, const S: usize>
 where
@@ -40,7 +42,7 @@ where
 ///
 /// Examples of such shapes include rectangles for 2D, and cubes for 3D. There is the added
 /// constraint that they can not be skewed, but must be perfectly aligned with axis.
-#[derive(PartialEq)]
+#[derive(PartialEq, Default, Copy, Clone)]
 #[cfg_attr(test, derive(Debug))]
 pub struct AxisAlignedBoundingBox<U, const S: usize>
 where
