@@ -14,5 +14,3 @@ documentation = "https://docs.rs/nostd_structs"
 [lib]
 name = "nostd_structs"
 path = "src/lib.rs"
-
-[dependencies]
