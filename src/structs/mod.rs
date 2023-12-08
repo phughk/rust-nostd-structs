@@ -2,8 +2,8 @@ use core::ops::Add;
 
 /// A n-dimensional point that is used in the spatial data structures
 ///
-/// U is the base unit
-/// L is the larger unit in case of overflow
+/// Unit is the base type used in the dimensions
+/// SumType is the larger unit in case of overflow
 /// S is the constant number of dimensions
 #[derive(PartialEq, Clone)]
 #[cfg_attr(test, derive(Debug))]
@@ -40,6 +40,10 @@ where
     pub fn dimension(&self, dimension: usize) -> &Unit {
         &self.dimensions[dimension]
     }
+
+    pub fn dimension_mut(&mut self, dimension: usize) -> &mut Unit {
+        &mut self.dimensions[dimension]
+    }
 }
 
 // Copy is manually implemented because derive copy doesnt work for slices
@@ -58,7 +62,7 @@ where
 #[cfg_attr(test, derive(Debug))]
 pub struct AxisAlignedBoundingBox<Unit, SumType, const S: usize>
 where
-    Unit: Copy + PartialEq + Add<Output = SumType> + PartialOrd,
+    Unit: Copy + PartialEq + Add<Output = SumType> + PartialOrd + Into<SumType>,
     SumType: Copy + PartialOrd,
 {
     origin: NDimensionalPoint<Unit, SumType, S>,
@@ -67,7 +71,7 @@ where
 
 impl<Unit, SumType, const S: usize> AxisAlignedBoundingBox<Unit, SumType, S>
 where
-    Unit: Copy + PartialEq + Add<Output = SumType> + PartialOrd,
+    Unit: Copy + PartialEq + Add<Output = SumType> + PartialOrd + Into<SumType>,
     SumType: Copy + PartialOrd,
 {
     /// Creates a new bounding box
@@ -94,7 +98,7 @@ where
             let other_min = other.origin.dimension(i);
             let other_max = *other_min + other.widths[i];
 
-            if self_max <= *other_min || self_min >= other_max {
+            if self_max <= (*other_min).into() || other_max <= (*self_min).into() {
                 return false;
             }
         }
@@ -144,7 +148,7 @@ mod test {
         y: i32,
     }
 
-    impl Add for &SomeStruct {
+    impl Add for SomeStruct {
         type Output = SomeStruct;
 
         fn add(self, rhs: Self) -> Self::Output {
@@ -157,12 +161,12 @@ mod test {
 
     #[test]
     fn can_reference() {
-        let ref_cell = RefCell::new(SomeStruct { x: 5, y: 6 });
-        let point: NDimensionalPoint<&SomeStruct, SomeStruct, 1> =
-            NDimensionalPoint::new([ref_cell.borrow().deref()]);
+        let mut some_struct = SomeStruct { x: 5, y: 6 };
+        let mut point: NDimensionalPoint<SomeStruct, SomeStruct, 1> =
+            NDimensionalPoint::new([some_struct]);
         assert_eq!(point.dimension(0).x, 5);
 
-        ref_cell.borrow_mut().x = 7;
+        point.dimension_mut(0).x = 7;
         assert_eq!(point.dimension(0).x, 7);
     }
 }
