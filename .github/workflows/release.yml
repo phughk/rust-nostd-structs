@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ github.event.inputs.branch }}
+          ref: "${GITHUB_REF#refs/heads/}"
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
@@ -30,35 +30,35 @@ jobs:
       - name: Install cargo-release
         run: cargo install cargo-release
 
-      - name: Configure Git
-        run: |
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
-
-      - name: Bump version and push tag
-        run: |
-          VERSION=${{ github.event.inputs.version }}
-
-          echo "Releasing version $VERSION"
-
-          # Update version in Cargo.toml and create git tag
-          cargo release --execute --no-push --no-publish --version $VERSION
-
-          # Push changes to Cargo.toml
-          git tag $VERSION
-          # Since there is no version in codebase, this is unnecessary
-          # git commit -am "Release version $VERSION"
-          git push origin $VERSION
-
       - name: Build and Test Release
         run: |
           cargo build --release --verbose
           cargo test --release --verbose
 
-      - name: Publish Crate
+      - name: Configure Git
         run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+
+      - name: Publish
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+          BRANCH="${GITHUB_REF#refs/heads/}"
+
+          echo "Logging into crates.io"
           cargo login ${{ secrets.CRATESIO_API_TOKEN }}
-          cargo publish --verbose
+
+          echo "Releasing $VERSION" 
+          # Update version in Cargo.toml
+          # Commit to repo
+          # Create git tag
+          # Push changes
+          cargo release --verbose --execute $VERSION
+          
+          # Push version commit and tag to github
+          git push --tags origin $BRANCH
         env:
           CARGO_TERM_COLOR: always
+    env:
+      GITHUB_REF: ${{ github.ref }}
 
