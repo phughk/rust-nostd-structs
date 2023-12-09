@@ -53,7 +53,7 @@ jobs:
           if [ "$DRY_RUN" = "false" ]; then
             echo "Executing release"
             # Update version in Cargo.toml, commit, tag, push
-            cargo release --verbose --execute $VERSION
+            cargo release --verbose --execute --no-confirm $VERSION
             # Push version commit and tag to github
             git push --tags origin $BRANCH
           else
