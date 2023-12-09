@@ -55,6 +55,8 @@ jobs:
             # Update version in Cargo.toml, commit, tag, push
             cargo release --verbose --execute --no-confirm $VERSION
             # Push version commit and tag to github
+            git add Cargo.toml
+            git commit -m "Release version $VERSION"
             git push --tags origin $BRANCH
           else
             echo "Dry run: not executing release"
