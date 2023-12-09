@@ -1,4 +1,4 @@
-name: Release Minor
+name: Release
 
 on:
   workflow_dispatch:
