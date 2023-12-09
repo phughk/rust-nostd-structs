@@ -1,11 +1,8 @@
-name: Release
+name: Release Minor
 
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version number (e.g., 1.0.5)'
-        required: true
       dry_run:
         description: 'Dry run (true/false)'
         required: true
@@ -42,7 +39,6 @@ jobs:
 
       - name: Publish
         run: |
-          VERSION=${{ github.event.inputs.version }}
           BRANCH=${{ github.ref }}
           DRY_RUN=${{ github.event.inputs.dry_run }}
 
@@ -53,14 +49,14 @@ jobs:
           if [ "$DRY_RUN" = "false" ]; then
             echo "Executing release"
             # Update version in Cargo.toml, commit, tag, push
-            cargo release --verbose --execute --no-confirm $VERSION
+            cargo release --verbose --execute --no-confirm minor
             # Push version commit and tag to github
-            git add Cargo.toml
-            git commit -m "Release version $VERSION"
+#            git add Cargo.toml
+#            git commit -m "Release version $VERSION"
             git push --tags origin $BRANCH
           else
             echo "Dry run: not executing release"
-            cargo release --verbose --dry-run $VERSION
+            cargo release --verbose minor
           fi
         env:
           CARGO_TERM_COLOR: always
