@@ -30,6 +30,11 @@ jobs:
       - name: Install cargo-release
         run: cargo install cargo-release
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+
       - name: Bump version
         run: |
           VERSION=${{ github.event.inputs.version }}
