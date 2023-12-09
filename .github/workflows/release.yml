@@ -35,7 +35,7 @@ jobs:
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
 
-      - name: Bump version
+      - name: Bump version and push tag
         run: |
           VERSION=${{ github.event.inputs.version }}
 
@@ -45,17 +45,9 @@ jobs:
           cargo release --execute --no-push --no-publish --version $VERSION
 
           # Push changes to Cargo.toml
-          git commit -am "Release version $VERSION"
-          git push origin ${{ github.event.inputs.branch }}
-
-      - name: Create and Push Tag
-        run: |
-          VERSION=${{ github.event.inputs.version }}
-
-          # Create git tag
           git tag $VERSION
-
-          # Push the tag to GitHub
+          # Since there is no version in codebase, this is unnecessary
+          # git commit -am "Release version $VERSION"
           git push origin $VERSION
 
       - name: Build and Test Release
