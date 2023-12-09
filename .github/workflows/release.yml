@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: "${GITHUB_REF#refs/heads/}"
+          ref: ${{ github.ref }}
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
@@ -39,7 +39,7 @@ jobs:
       - name: Publish
         run: |
           VERSION=${{ github.event.inputs.version }}
-          BRANCH="${GITHUB_REF#refs/heads/}"
+          BRANCH=${{ github.ref }}
 
           echo "Logging into crates.io"
           cargo login ${{ secrets.CRATESIO_API_TOKEN }}
@@ -55,6 +55,4 @@ jobs:
           git push --tags origin $BRANCH
         env:
           CARGO_TERM_COLOR: always
-    env:
-      GITHUB_REF: ${{ github.ref }}
 
