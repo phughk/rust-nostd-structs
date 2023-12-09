@@ -30,14 +30,25 @@ jobs:
       - name: Install cargo-release
         run: cargo install cargo-release
 
-      - name: Bump version and create tag
+      - name: Bump version
         run: |
           VERSION=${{ github.event.inputs.version }}
 
           echo "Releasing version $VERSION"
-          
+
           # Update version in Cargo.toml and create git tag
           cargo release --execute --no-push --no-publish --version $VERSION
+
+          # Push changes to Cargo.toml
+          git commit -am "Release version $VERSION"
+          git push origin ${{ github.event.inputs.branch }}
+
+      - name: Create and Push Tag
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+
+          # Create git tag
+          git tag $VERSION
 
           # Push the tag to GitHub
           git push origin $VERSION
