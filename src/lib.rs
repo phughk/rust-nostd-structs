@@ -21,4 +21,5 @@
 
 extern crate alloc;
 
+pub mod algos;
 pub mod structs;
