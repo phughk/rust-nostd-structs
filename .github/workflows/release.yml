@@ -4,8 +4,12 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version number (e.g., v1.0.5)'
+        description: 'Version number (e.g., 1.0.5)'
         required: true
+      dry_run:
+        description: 'Dry run (true/false)'
+        required: true
+        default: true
 
 jobs:
   release:
@@ -40,19 +44,22 @@ jobs:
         run: |
           VERSION=${{ github.event.inputs.version }}
           BRANCH=${{ github.ref }}
+          DRY_RUN=${{ github.event.inputs.dry_run }}
 
           echo "Logging into crates.io"
           cargo login ${{ secrets.CRATESIO_API_TOKEN }}
 
-          echo "Releasing $VERSION" 
-          # Update version in Cargo.toml
-          # Commit to repo
-          # Create git tag
-          # Push changes
-          cargo release --verbose --execute $VERSION
-          
-          # Push version commit and tag to github
-          git push --tags origin $BRANCH
+          # Check if it's a dry run
+          if [ "$DRY_RUN" = "false" ]; then
+            echo "Executing release"
+            # Update version in Cargo.toml, commit, tag, push
+            cargo release --verbose --execute $VERSION
+            # Push version commit and tag to github
+            git push --tags origin $BRANCH
+          else
+            echo "Dry run: not executing release"
+            cargo release --verbose --dry-run $VERSION
+          fi
         env:
           CARGO_TERM_COLOR: always
 
