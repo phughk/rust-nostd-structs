@@ -1,22 +1,46 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - '*'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to release from'
+        required: true
+        default: 'main'
+      version:
+        description: 'Version number (e.g., v1.0.5)'
+        required: true
 
 jobs:
   release:
     runs-on: ubuntu-latest
+    environment: production
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.inputs.branch }}
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
+
+      - name: Install cargo-release
+        run: cargo install cargo-release
+
+      - name: Bump version and create tag
+        run: |
+          VERSION=${{ github.event.inputs.version }}
+
+          echo "Releasing version $VERSION"
+          
+          # Update version in Cargo.toml and create git tag
+          cargo release --execute --no-push --no-publish --version $VERSION
+
+          # Push the tag to GitHub
+          git push origin $VERSION
 
       - name: Build and Test Release
         run: |
@@ -25,7 +49,8 @@ jobs:
 
       - name: Publish Crate
         run: |
-          cargo login ${{secrets.CRATESIO_API_TOKEN}}
+          cargo login ${{ secrets.CRATESIO_API_TOKEN }}
           cargo publish --verbose
         env:
           CARGO_TERM_COLOR: always
+
