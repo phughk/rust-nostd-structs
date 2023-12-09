@@ -3,6 +3,10 @@ name: Release Minor
 on:
   workflow_dispatch:
     inputs:
+      type:
+        description: 'Type of release (major/minor/patch)'
+        required: true
+        default: 'minor'
       dry_run:
         description: 'Dry run (true/false)'
         required: true
@@ -41,6 +45,7 @@ jobs:
         run: |
           BRANCH=${{ github.ref }}
           DRY_RUN=${{ github.event.inputs.dry_run }}
+          REL_TYPE=${{ github.event.inputs.type }}
 
           echo "Logging into crates.io"
           cargo login ${{ secrets.CRATESIO_API_TOKEN }}
@@ -49,14 +54,16 @@ jobs:
           if [ "$DRY_RUN" = "false" ]; then
             echo "Executing release"
             # Update version in Cargo.toml, commit, tag, push
-            cargo release --verbose --execute --no-confirm minor
+            cargo release --verbose --execute --no-confirm $REL_TYPE
             # Push version commit and tag to github
             # git add Cargo.toml
             # git commit -m "Release version $VERSION"
+            VERSION=`grep "^version" Cargo.toml | cut -d '"' -f2`
+            echo "Pushing version $VERSION"
             git push --tags origin $BRANCH
           else
             echo "Dry run: not executing release"
-            cargo release --verbose minor
+            cargo release --verbose $REL_TYPE
           fi
         env:
           CARGO_TERM_COLOR: always
