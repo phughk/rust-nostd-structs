@@ -1,64 +1,28 @@
-name: Release
-
+name: Open a release PR
 on:
   workflow_dispatch:
     inputs:
-      branch:
-        description: 'Branch to release from'
-        required: true
-        default: 'main'
       version:
-        description: 'Version number (e.g., v1.0.5)'
+        description: Version to release
         required: true
+        type: string
 
 jobs:
-  release:
+  make-release-pr:
+    permissions:
+      id-token: write # Enable OIDC
+      pull-requests: write
+      contents: write
     runs-on: ubuntu-latest
-    environment: production
-
     steps:
       - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.event.inputs.branch }}
-
-      - name: Set up Rust
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-
+      - uses: chainguard-dev/actions/setup-gitsign@main
       - name: Install cargo-release
-        run: cargo install cargo-release
+        uses: taiki-e/install-action@v1
+        with:
+          tool: cargo-release
 
-      - name: Configure Git
-        run: |
-          git config --global user.name "GitHub Action"
-          git config --global user.email "action@github.com"
-
-      - name: Bump version and push tag
-        run: |
-          VERSION=${{ github.event.inputs.version }}
-
-          echo "Releasing version $VERSION"
-
-          # Update version in Cargo.toml and create git tag
-          cargo release --execute --no-push --no-publish --version $VERSION
-
-          # Push changes to Cargo.toml
-          git tag $VERSION
-          # Since there is no version in codebase, this is unnecessary
-          # git commit -am "Release version $VERSION"
-          git push origin $VERSION
-
-      - name: Build and Test Release
-        run: |
-          cargo build --release --verbose
-          cargo test --release --verbose
-
-      - name: Publish Crate
-        run: |
-          cargo login ${{ secrets.CRATESIO_API_TOKEN }}
-          cargo publish --verbose
-        env:
-          CARGO_TERM_COLOR: always
-
+      - uses: cargo-bins/release-pr@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          version: ${{ inputs.version }}
