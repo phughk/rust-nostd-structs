@@ -2,6 +2,8 @@
 //!
 //! This is a simple random number generator that is not cryptographically secure.
 
+use crate::algos::rand::RandomNumberGenerator;
+
 /// Linear congruential generator.
 ///
 /// You can use this to generate random numbers by providing a seed only.
@@ -43,6 +45,12 @@ impl LcgRng {
         let m = 2u64.pow(32);
         self.state = (a.wrapping_mul(self.state) + c) % m;
         self.state
+    }
+}
+
+impl RandomNumberGenerator for LcgRng {
+    fn next(&mut self) -> u64 {
+        self.next()
     }
 }
 
