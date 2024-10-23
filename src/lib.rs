@@ -22,4 +22,5 @@
 extern crate alloc;
 
 pub mod algos;
+pub mod conversion;
 pub mod structs;
