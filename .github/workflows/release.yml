@@ -1,3 +1,5 @@
+# This workflow will update the local version and publish to crates.io
+# So if you are doing a github release as well, do it after the the workflow release
 name: Release
 
 on:

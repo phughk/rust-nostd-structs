@@ -1,6 +1,6 @@
 /// The LruMap (i.e. Least Recently Used Map) is a map of keys to values, with a fixed capacity.
 /// Adding keys beyond the capacity will remove the least recently accessed key-value tuple and return it.
-pub struct LruMap<K, V, const S: usize> {
+pub struct LruMap<K: PartialEq, V, const S: usize> {
     data: arrayvec::ArrayVec<(usize, K, V), S>,
     next_operation: usize,
 }
