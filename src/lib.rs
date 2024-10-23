@@ -9,7 +9,6 @@
 //! This has performance benefits and leads to predictable memory usage, at the cost of not using
 //! memory dynamically.
 #![no_std]
-#![feature(const_for)]
 #![deny(missing_docs)]
 #![deny(rustdoc::broken_intra_doc_links)]
 #![deny(rustdoc::private_intra_doc_links)]
