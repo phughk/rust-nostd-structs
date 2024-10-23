@@ -7,6 +7,11 @@
 //! {{structs::AxisAlignedBoundingBox}}. Users can then create these strucutures to whatever sizes
 //! and dimensions they need, and conveniently apply them to the algorithms, without having to write
 //! Into traits for tuples or arrays.
+
+mod lru_map;
+
+pub use lru_map::LruMap;
+
 use core::ops::Add;
 
 /// A n-dimensional point that is used in the spatial data structures
