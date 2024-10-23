@@ -30,6 +30,8 @@ impl<K: PartialEq, V, const S: usize> LruMap<K, V, S> {
     }
 
     /// Get the value by key if it exists
+    ///
+    /// If you need a mutable reference, you can use "as_mut"
     pub fn get(&mut self, key: &K) -> Option<&V> {
         let new_op = self.get_and_inc_op();
         for (op, k, v) in self.data.iter_mut() {
@@ -55,6 +57,16 @@ impl<K: PartialEq, V, const S: usize> LruMap<K, V, S> {
                 Some((k, v))
             }
         }
+    }
+
+    /// Returns the capacity of the map
+    pub fn capacity(&self) -> usize {
+        S
+    }
+
+    /// Returns the len of the map. Can be used to determine if you should use insert or get_least_recently_used
+    pub fn len(&self) -> usize {
+        self.data.len()
     }
 
     fn get_and_inc_op(&mut self) -> usize {
