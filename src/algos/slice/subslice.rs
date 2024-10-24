@@ -1,5 +1,3 @@
-//! Functionality to help working with slices
-
 /// Given a list of items (such as options in a menu), and a selection index, find a subslice that prioritises the selection being in the middle
 pub fn find_fitting_subslice<A>(options: &[A], selection: usize, height: usize) -> (&[A], usize) {
     // Handle edge case where the entire list fits within the given height
