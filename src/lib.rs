@@ -19,7 +19,8 @@
 #![deny(rustdoc::invalid_rust_codeblocks)]
 #![deny(rustdoc::unescaped_backticks)]
 
-extern crate alloc;
+#[cfg(test)]
+extern crate std;
 
 pub mod algos;
 pub mod conversion;
