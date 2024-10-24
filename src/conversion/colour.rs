@@ -39,7 +39,7 @@ pub const fn convert_1bpp_5bpp<const S: usize>(data: &[u8; S], fg: u8, bg: u8) -
 
 /// Flip 1-bit, 8 pixel array
 /// So 0b1010_0000 becomes 0b0000_0101
-pub const fn vflip_1bpp(data: &mut [u8]) {
+pub const fn vflip_1bpp<const S: usize>(mut data: [u8; S]) -> [u8; S] {
     let mut i = 0;
     while i < data.len() {
         let mut flipped = 0u8;
@@ -59,6 +59,7 @@ pub const fn vflip_1bpp(data: &mut [u8]) {
         data[i] = flipped;
         i += 1;
     }
+    data
 }
 
 #[cfg(test)]
@@ -97,7 +98,7 @@ mod tests {
     #[test]
     pub fn test_vflip_1bpp() {
         let mut data: [u8; 4] = [0b1111_0000, 0b0000_1111, 0b1010_1010, 0b0101_0101];
-        vflip_1bpp(&mut data);
+        let data = vflip_1bpp(data);
         assert_eq!(
             data,
             [0b0000_1111, 0b1111_0000, 0b0101_0101, 0b1010_1010,],
