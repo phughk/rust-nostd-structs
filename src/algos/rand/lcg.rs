@@ -57,7 +57,7 @@ impl RandomNumberGenerator for LcgRng {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alloc::collections::BTreeSet;
+    use std::collections::BTreeSet;
 
     #[test]
     fn test_lcg() {
