@@ -37,34 +37,47 @@ pub const fn convert_1bpp_5bpp<const S: usize>(data: &[u8; S], fg: u8, bg: u8) -
     ret
 }
 
-/// Flip 1-bit, 8 pixel array
-/// So 0b1010_0000 becomes 0b0000_0101
-pub const fn vflip_1bpp<const S: usize>(mut data: [u8; S]) -> [u8; S] {
+/// Flip a provided array
+pub const fn vflip_1bpp_const<const S: usize>(mut data: [u8; S]) -> [u8; S] {
     let mut i = 0;
     while i < data.len() {
-        let mut flipped = 0u8;
-        let mut bit = 0u8;
-        while bit < 8 {
-            let shift = 7 - bit;
-            let source_mask = 1u8 << shift;
-            let val = data[i] & source_mask;
-            // Make the value '1' or '0'
-            let val = val >> shift;
-            // Make the value correct new position
-            // We do it this way, because otherwise, there is overflow/change of shift direction
-            let val = val << bit;
-            flipped |= val;
-            bit += 1;
-        }
+        let flipped = vflip_1bpp_single(data[i]);
         data[i] = flipped;
         i += 1;
     }
     data
 }
 
+/// Flip 1-bit, 8 pixel value
+/// So 0b1010_0000 becomes 0b0000_0101
+pub const fn vflip_1bpp_single(data: u8) -> u8 {
+    let mut flipped = 0u8;
+    let mut bit = 0u8;
+    while bit < 8 {
+        let shift = 7 - bit;
+        let source_mask = 1u8 << shift;
+        let val = data & source_mask;
+        // Make the value '1' or '0'
+        let val = val >> shift;
+        // Make the value correct new position
+        // We do it this way, because otherwise, there is overflow/change of shift direction
+        let val = val << bit;
+        flipped |= val;
+        bit += 1;
+    }
+    flipped
+}
+
+/// Flip 1-bit, 8-pixel array
+pub fn vflip_1bpp_mut(mut data: &mut [u8]) {
+    for i in data.iter_mut() {
+        *i = vflip_1bpp_single(*i);
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use crate::conversion::colour::{convert_1bpp_5bpp, vflip_1bpp};
+    use crate::conversion::colour::{convert_1bpp_5bpp, vflip_1bpp_const};
     use std::format;
     use std::string::String;
     use std::vec::Vec;
@@ -98,7 +111,7 @@ mod tests {
     #[test]
     pub fn test_vflip_1bpp() {
         let mut data: [u8; 4] = [0b1111_0000, 0b0000_1111, 0b1010_1010, 0b0101_0101];
-        let data = vflip_1bpp(data);
+        let data = vflip_1bpp_const(data);
         assert_eq!(
             data,
             [0b0000_1111, 0b1111_0000, 0b0101_0101, 0b1010_1010,],
