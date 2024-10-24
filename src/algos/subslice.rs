@@ -4,7 +4,7 @@
 pub fn find_fitting_subslice<A>(options: &[A], selection: usize, height: usize) -> (&[A], usize) {
     // Handle edge case where the entire list fits within the given height
     if options.len() <= height {
-        return (options, selection);
+        return (options, 0);
     }
 
     let half_height = height / 2;
@@ -32,7 +32,7 @@ pub fn find_fitting_subslice<A>(options: &[A], selection: usize, height: usize) 
 }
 
 #[cfg(test)]
-pub mod tests {
+mod tests {
     use crate::algos::subslice::find_fitting_subslice;
 
     #[test]
@@ -53,6 +53,10 @@ pub mod tests {
         assert_eq!(
             find_fitting_subslice(&data, 2, 4),
             (&[1, 2, 3, 4] as &[i32], 0)
+        );
+        assert_eq!(
+            find_fitting_subslice(&[0, 1, 2], 2, 20),
+            (&[0, 1, 2] as &[i32], 0)
         );
     }
 }
