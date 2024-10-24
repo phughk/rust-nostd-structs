@@ -33,7 +33,7 @@ pub fn find_fitting_subslice<A>(options: &[A], selection: usize, height: usize) 
 
 #[cfg(test)]
 mod tests {
-    use crate::algos::subslice::find_fitting_subslice;
+    use crate::algos::slice::subslice::find_fitting_subslice;
 
     #[test]
     pub fn test_find_subslice() {
