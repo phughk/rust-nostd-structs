@@ -33,6 +33,7 @@ impl<K: PartialEq, V, const S: usize> LruMap<K, V, S> {
     ///
     /// If you need a mutable reference, you can use "as_mut"
     pub fn get(&mut self, key: &K) -> Option<&V> {
+        // TODO what if max is reached? Need to rebalance all entries
         let new_op = self.get_and_inc_op();
         for (op, k, v) in self.data.iter_mut() {
             if key == k {

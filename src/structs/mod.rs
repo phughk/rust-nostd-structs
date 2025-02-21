@@ -9,6 +9,7 @@
 //! Into traits for tuples or arrays.
 
 mod lru_map;
+mod rtree;
 
 pub use lru_map::LruMap;
 
