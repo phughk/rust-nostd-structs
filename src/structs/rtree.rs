@@ -12,6 +12,8 @@ where
     data: [Option<T>; Sz],
     remaining_capacity: usize,
     phantom_data: PhantomData<D>,
+    levels: usize,
+    page_size: usize,
 }
 
 /// Allows for arbitrary dimensions
@@ -25,15 +27,13 @@ where
 pub const fn calc_rtree_size(levels: usize, page_size: usize) -> usize {
     assert!(levels > 0);
     assert!(page_size > 0);
-    if levels == 0 {
-        return 0;
-    }
+    let mut total_nodes = 0;
+    let mut level = 1; // Start at level 1
+    let mut power = page_size; // page_size^1
 
-    let mut total_nodes = 0; // Start with root node
-
-    let mut level = 1;
     while level <= levels {
-        total_nodes += page_size.pow(level as u32);
+        total_nodes += power;
+        power *= page_size;
         level += 1;
     }
 
@@ -45,18 +45,26 @@ where
     T: Dimensionable<DimSz, D>,
     D: PartialOrd + Clone + Copy,
 {
-    pub fn new() -> Self {
+    pub fn new(levels: usize, page_size: usize) -> Self {
+        let calc = calc_rtree_size(levels, page_size);
+        assert_eq!(calc, Sz);
         RTree {
             data: [None; Sz],
             remaining_capacity: Sz,
+            levels,
+            page_size,
             phantom_data: PhantomData,
         }
     }
 
-    pub const fn new_const() -> Self {
+    pub const fn new_const(levels: usize, page_size: usize) -> Self {
+        let calc = calc_rtree_size(levels, page_size);
+        assert_eq!(calc, Sz);
         RTree {
             data: [None; Sz],
             remaining_capacity: Sz,
+            levels,
+            page_size,
             phantom_data: PhantomData,
         }
     }
@@ -87,7 +95,7 @@ mod test {
         let mut cases = vec![];
         for levels in 1..10 {
             for page_size in 1..10 {
-                let actual = calc_rtree_size(page_size, levels);
+                let actual = calc_rtree_size(levels, page_size);
                 let expected = (1..=levels)
                     .into_iter()
                     .map(|level| page_size.pow(level as u32))
@@ -104,7 +112,7 @@ mod test {
             assert_eq!(
                 case.expected,
                 case.actual,
-                "Cases: {}\nCase: {:?}",
+                "Cases: \n{}\nCase: {:?}",
                 cases
                     .iter()
                     .map(|c| format!("{:?}", c))
