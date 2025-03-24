@@ -1,4 +1,6 @@
 /// A point in n-dimensional space.
+#[derive(PartialEq)]
+#[cfg_attr(test, derive(Debug))]
 pub struct Point2D<T> {
     /// X-axis value
     pub x: T,

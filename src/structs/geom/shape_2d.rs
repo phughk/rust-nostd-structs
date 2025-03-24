@@ -4,14 +4,14 @@ use crate::structs::geom::{Line2D, Polygon2D};
 /// Methods for handling a shape in 2D space
 pub trait Shape2D<const SZ: usize, T> {
     /// Rotate the shape by a number of degrees using f32 calculations
-    fn rotate_deg(self, degrees: f64) -> Self;
+    fn rotate_deg(self, point: Point2D<T>, degrees: T) -> Self;
     /// Rotate the shape by a number of degrees using f32 calculations
-    fn rotate_deg_mut(&mut self, degrees: f64);
+    fn rotate_deg_mut(&mut self, point: Point2D<T>, degrees: T);
 
     /// Rotate the shape by a number of radians using f32 calculations
-    fn rotate_rad(self, radians: T) -> Self;
+    fn rotate_rad(self, point: Point2D<T>, radians: T) -> Self;
     /// Rotate the shape by a number of radians using f32 calculations
-    fn rotate_rad_mut(&mut self, radians: T);
+    fn rotate_rad_mut(&mut self, point: Point2D<T>, radians: T);
 
     /// Get the area of the shape using f32 calculations
     fn surface(&self) -> T;
