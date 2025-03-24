@@ -1,3 +1,5 @@
+//! Least Recently Used Map
+
 /// The LruMap (i.e. Least Recently Used Map) is a map of keys to values, with a fixed capacity.
 /// Adding keys beyond the capacity will remove the least recently accessed key-value tuple and return it.
 pub struct LruMap<K: PartialEq, V, const S: usize> {
