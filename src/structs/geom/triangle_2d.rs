@@ -29,7 +29,7 @@ impl Shape2D<3, f32> for Triangle2D<f32> {
         super::misc::rotate_deg_mut(&mut self.points, point2d, degrees);
     }
 
-    fn rotate_rad_mut(&mut self, point2d: Point2D<f32>, radians: f32) {
+    fn rotate_rad_mut(&mut self, _point2d: Point2D<f32>, _radians: f32) {
         todo!()
     }
 
@@ -110,7 +110,7 @@ impl Shape2D<3, f64> for Triangle2D<f64> {
         super::misc::rotate_deg_mut(&mut self.points, point2d, degrees);
     }
 
-    fn rotate_rad_mut(&mut self, point2d: Point2D<f64>, radians: f64) {
+    fn rotate_rad_mut(&mut self, _point2d: Point2D<f64>, _radians: f64) {
         todo!()
     }
 

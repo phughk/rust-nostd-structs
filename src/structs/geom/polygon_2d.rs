@@ -36,20 +36,11 @@ impl<const N: usize, T: PartialEq> PartialEq for Polygon2D<N, T> {
 }
 
 impl<const N: usize> Shape2D<N, f32> for Polygon2D<N, f32> {
-    fn rotate_deg(mut self, point: Point2D<f32>, degrees: f32) -> Self {
-        self.rotate_deg_mut(point, degrees);
-        self
-    }
-
     fn rotate_deg_mut(&mut self, point: Point2D<f32>, degrees: f32) {
         super::misc::rotate_deg_mut(&mut self.points, point, degrees);
     }
 
-    fn rotate_rad(self, point: Point2D<f32>, radians: f32) -> Self {
-        todo!()
-    }
-
-    fn rotate_rad_mut(&mut self, point: Point2D<f32>, radians: f32) {
+    fn rotate_rad_mut(&mut self, _point: Point2D<f32>, _radians: f32) {
         todo!()
     }
 
