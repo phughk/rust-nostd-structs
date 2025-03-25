@@ -9006,8 +9006,10 @@ const COS_LUT: [f64; 36000] = [
 ];
 
 /// Get the sin value from literal degrees, so 45u8 for 45 degrees and 360u8 is the same as 0u8
-pub fn cos_degrees(degrees: f64) -> f64 {
-    // TODO do checks for negative values
+pub fn cos_degrees(mut degrees: f64) -> f64 {
+    while degrees < 0.0 {
+        degrees = 360.0 + degrees;
+    }
     let degrees = (degrees * 100.0) as usize % 36000;
     COS_LUT[degrees]
 }

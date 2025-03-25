@@ -1,11 +1,12 @@
 use crate::structs::geom::point_2d::Point2D;
 use crate::structs::geom::{Line2D, Shape2D};
+use arrayvec::ArrayVec;
 
 /// An N-polygon in 2D space
 #[cfg_attr(test, derive(Debug))]
 pub struct Polygon2D<const N: usize, T> {
     /// Points of the polygon
-    pub points: [Point2D<T>; N],
+    pub points: ArrayVec<Point2D<T>, N>,
 }
 
 impl<const N: usize, T: PartialEq> PartialEq for Polygon2D<N, T> {
@@ -42,7 +43,7 @@ impl<const N: usize> Shape2D<N, f32> for Polygon2D<N, f32> {
     }
 
     fn surface(&self) -> f32 {
-        todo!()
+        super::misc::polygon_area_shoelace(&self.points)
     }
 
     fn center(&self) -> Point2D<f32> {
@@ -84,17 +85,18 @@ impl<const N: usize> Shape2D<N, f32> for Polygon2D<N, f32> {
 #[cfg(test)]
 mod test {
     use crate::structs::geom::{Point2D, Polygon2D, Shape2D};
+    use arrayvec::ArrayVec;
 
     #[test]
     fn test_rotate() {
         let mut polygon = Polygon2D {
-            points: [
+            points: ArrayVec::from([
                 Point2D::new(1.0, 1.0),
                 Point2D::new(1.0, 5.0),
                 Point2D::new(4.0, 4.0),
                 Point2D::new(5.0, 4.0),
                 Point2D::new(5.0, 1.0),
-            ],
+            ]),
         };
 
         polygon.rotate_deg_mut(Point2D::new(-1.0, -1.0), 90.0);
@@ -103,14 +105,25 @@ mod test {
         assert_eq!(
             polygon,
             Polygon2D {
-                points: [
+                points: ArrayVec::from([
                     Point2D::new(-3.0, 1.0),
                     Point2D::new(-7.0, 1.0),
                     Point2D::new(-6.0, 4.0),
                     Point2D::new(-6.0, 5.0),
                     Point2D::new(-3.0, 5.0),
-                ]
+                ])
             }
         )
+    }
+}
+
+impl<const N: usize, T> Polygon2D<N, T> {
+    pub fn resize<const M: usize>(self) -> Result<Polygon2D<M, T>, ()> {
+        if self.points.len() > M {
+            return Err(());
+        }
+        let mut points = ArrayVec::new();
+        points.extend(self.points);
+        Ok(Polygon2D { points })
     }
 }

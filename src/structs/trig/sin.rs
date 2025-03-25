@@ -9008,7 +9008,10 @@ pub const SIN_LUT: [f64; 36000] = [
 ];
 
 /// Get the sin value from literal degrees, so 45.0 for 45 degrees and sin(360.0) is the same as sin(0.0)
-pub fn sin_degrees(degrees: f64) -> f64 {
+pub fn sin_degrees(mut degrees: f64) -> f64 {
+    while degrees < 0.0 {
+        degrees = 360.0 + degrees;
+    }
     let degrees = (degrees * 100.0) as usize % 36000;
     SIN_LUT[degrees]
 }

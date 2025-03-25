@@ -9006,7 +9006,10 @@ const TAN_LUT: [f64; 36000] = [
 ];
 
 /// Calculate the tangent of an angle in degrees.
-pub fn tan_degrees(degrees: f64) -> f64 {
+pub fn tan_degrees(mut degrees: f64) -> f64 {
+    while degrees < 0.0 {
+        degrees = 360.0 + degrees;
+    }
     let degrees = (degrees * 100.0) as usize % 36000;
     TAN_LUT[degrees]
 }
