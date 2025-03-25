@@ -2,9 +2,25 @@ use crate::structs::geom::point_2d::Point2D;
 use crate::structs::geom::{Line2D, Shape2D};
 
 /// An N-polygon in 2D space
+#[cfg_attr(test, derive(Debug))]
 pub struct Polygon2D<const N: usize, T> {
     /// Points of the polygon
     pub points: [Point2D<T>; N],
+}
+
+impl<const N: usize, T: PartialEq> PartialEq for Polygon2D<N, T> {
+    fn eq(&self, other: &Self) -> bool {
+        let mut used = [false; N];
+        for i in 0..N {
+            for j in 0..N {
+                if &self.points[i] == &other.points[j] && !used[j] {
+                    used[j] = true;
+                    break;
+                }
+            }
+        }
+        used.iter().all(|&x| x)
+    }
 }
 
 impl<const N: usize> Shape2D<N, f32> for Polygon2D<N, f32> {
@@ -62,5 +78,39 @@ impl<const N: usize> Shape2D<N, f32> for Polygon2D<N, f32> {
 
     fn edges(&self) -> [Line2D<f32>; N] {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::structs::geom::{Point2D, Polygon2D, Shape2D};
+
+    #[test]
+    fn test_rotate() {
+        let mut polygon = Polygon2D {
+            points: [
+                Point2D::new(1.0, 1.0),
+                Point2D::new(1.0, 5.0),
+                Point2D::new(4.0, 4.0),
+                Point2D::new(5.0, 4.0),
+                Point2D::new(5.0, 1.0),
+            ],
+        };
+
+        polygon.rotate_deg_mut(Point2D::new(-1.0, -1.0), 90.0);
+
+        // https://www.desmos.com/calculator/23qwxcfs2e
+        assert_eq!(
+            polygon,
+            Polygon2D {
+                points: [
+                    Point2D::new(-3.0, 1.0),
+                    Point2D::new(-7.0, 1.0),
+                    Point2D::new(-6.0, 4.0),
+                    Point2D::new(-6.0, 5.0),
+                    Point2D::new(-3.0, 5.0),
+                ]
+            }
+        )
     }
 }

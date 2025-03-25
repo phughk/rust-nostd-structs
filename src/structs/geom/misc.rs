@@ -12,7 +12,7 @@ pub(super) fn rotate_deg_mut<
     let cos_theta = T::from(cos_degrees(degrees.into()) as f32);
     let sin_theta = T::from(sin_degrees(degrees.into()) as f32);
 
-    // Rotate each point around the centroid
+    // Rotate each point around the provided point
     for p in points.iter_mut() {
         let dx = p.x - point2d.x;
         let dy = p.y - point2d.y;

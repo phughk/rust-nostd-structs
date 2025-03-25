@@ -69,7 +69,7 @@ pub const fn vflip_1bpp_single(data: u8) -> u8 {
 }
 
 /// Flip 1-bit, 8-pixel array
-pub fn vflip_1bpp_mut(mut data: &mut [u8]) {
+pub fn vflip_1bpp_mut(data: &mut [u8]) {
     for i in data.iter_mut() {
         *i = vflip_1bpp_single(*i);
     }
