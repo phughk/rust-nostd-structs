@@ -1,5 +1,6 @@
 //! Multidimensional geometry structs that are used in multidimensional algorithms
 mod line_2d;
+mod misc;
 mod point_2d;
 mod polygon_2d;
 mod shape_2d;

@@ -9007,12 +9007,6 @@ pub const SIN_LUT: [f64; 36000] = [
     -0.0006981316,-0.0005235988,-0.0003490658,-0.0001745329
 ];
 
-/// Pi approximation that correlates with LUT granularity
-pub const PI: f64 = 3.14;
-
-/// Basically 1 radian (ratio of 1 degrees to pi)
-pub const DEGREE_TO_PI: f64 = 180.0 / PI;
-
 /// Get the sin value from literal degrees, so 45.0 for 45 degrees and sin(360.0) is the same as sin(0.0)
 pub fn sin_degrees(degrees: f64) -> f64 {
     let degrees = (degrees * 100.0) as usize % 36000;

@@ -1,6 +1,5 @@
 use crate::structs::geom::point_2d::Point2D;
 use crate::structs::geom::{Line2D, Polygon2D, Shape2D};
-use crate::structs::trig::{cos_degrees, sin_degrees};
 
 /// A triangle in 2D space
 #[cfg_attr(test, derive(Debug))]
@@ -31,19 +30,7 @@ impl Shape2D<3, f32> for Triangle2D<f32> {
     }
 
     fn rotate_deg_mut(&mut self, point2d: Point2D<f32>, degrees: f32) {
-        let cos_theta = cos_degrees(degrees as f64) as f32;
-        let sin_theta = sin_degrees(degrees as f64) as f32;
-
-        // Rotate each point around the centroid
-        for p in self.points.iter_mut() {
-            let dx = p.x - point2d.x;
-            let dy = p.y - point2d.y;
-
-            let rotated_x = dx * cos_theta - dy * sin_theta + point2d.x;
-            let rotated_y = dx * sin_theta + dy * cos_theta + point2d.y;
-            p.x = rotated_x;
-            p.y = rotated_y;
-        }
+        super::misc::rotate_deg_mut(&mut self.points, point2d, degrees);
     }
 
     fn rotate_rad(self, point2d: Point2D<f32>, radians: f32) -> Self {
@@ -136,7 +123,7 @@ impl Shape2D<3, f32> for Triangle2D<f32> {
     }
 
     fn points(&self) -> &[Point2D<f32>] {
-        todo!()
+        &self.points
     }
 
     fn edges(&self) -> [Line2D<f32>; 3] {
@@ -155,17 +142,7 @@ impl Shape2D<3, f64> for Triangle2D<f64> {
     }
 
     fn rotate_deg_mut(&mut self, point2d: Point2D<f64>, degrees: f64) {
-        let cos_theta = cos_degrees(degrees);
-        let sin_theta = sin_degrees(degrees);
-
-        // Rotate each point around the centroid
-        for p in self.points.iter_mut() {
-            let dx = p.x - point2d.x;
-            let dy = p.y - point2d.y;
-
-            p.x = dx * cos_theta - dy * sin_theta + point2d.x;
-            p.y = dx * sin_theta + dy * cos_theta + point2d.y;
-        }
+        super::misc::rotate_deg_mut(&mut self.points, point2d, degrees);
     }
 
     fn rotate_rad(self, point2d: Point2D<f64>, radians: f64) -> Self {
