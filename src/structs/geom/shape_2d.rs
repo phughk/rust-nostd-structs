@@ -1,5 +1,6 @@
 use crate::structs::geom::point_2d::Point2D;
 use crate::structs::geom::{Line2D, Polygon2D};
+use arrayvec::ArrayVec;
 
 /// Methods for handling a shape in 2D space
 pub trait Shape2D<const SZ: usize, T> {
@@ -42,5 +43,5 @@ pub trait Shape2D<const SZ: usize, T> {
     fn points(&self) -> &[Point2D<T>];
 
     /// Edges of the shape
-    fn edges(&self) -> [Line2D<T>; SZ];
+    fn edges(&self) -> ArrayVec<Line2D<T>, SZ>;
 }

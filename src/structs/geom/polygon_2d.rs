@@ -47,15 +47,80 @@ impl<const N: usize> Shape2D<N, f32> for Polygon2D<N, f32> {
     }
 
     fn center(&self) -> Point2D<f32> {
-        todo!()
+        let n = self.points.len();
+        assert!(n >= 3, "A polygon must have at least 3 points");
+
+        let mut area = 0.0;
+        let mut cx = 0.0;
+        let mut cy = 0.0;
+
+        for i in 0..n {
+            let p0 = &self.points[i];
+            let p1 = &self.points[(i + 1) % n];
+
+            let cross = p0.x * p1.y - p1.x * p0.y;
+            area += cross;
+            cx += (p0.x + p1.x) * cross;
+            cy += (p0.y + p1.y) * cross;
+        }
+
+        area *= 0.5;
+        let factor = 1.0 / (6.0 * area);
+
+        Point2D {
+            x: cx * factor,
+            y: cy * factor,
+        }
     }
 
     fn closest_point(&self, point: Point2D<f32>) -> Point2D<f32> {
-        todo!()
+        if self.point_in_shape(point) {
+            return point;
+        }
+
+        assert!(
+            self.points.len() >= 2,
+            "Polygon must have at least 2 points"
+        );
+
+        let mut closest = None;
+        let mut min_dist = f32::MAX;
+
+        for i in 0..self.points.len() {
+            let a = self.points[i];
+            let b = self.points[(i + 1) % self.points.len()];
+            let candidate = Line2D::new(a, b).closest_point_on_segment(&point);
+            let dist = candidate.distance_squared(&point);
+
+            if dist < min_dist {
+                min_dist = dist;
+                closest = Some(candidate);
+            }
+        }
+
+        closest.unwrap()
     }
 
     fn point_in_shape(&self, point: Point2D<f32>) -> bool {
-        todo!()
+        let mut inside = false;
+        let n = self.points.len();
+
+        for i in 0..n {
+            let a = self.points[i];
+            let b = self.points[(i + 1) % n];
+
+            let (px, py) = (point.x, point.y);
+            let (x1, y1) = (a.x, a.y);
+            let (x2, y2) = (b.x, b.y);
+
+            let intersect = ((y1 > py) != (y2 > py))
+                && (px < (x2 - x1) * (py - y1) / (y2 - y1 + f32::EPSILON) + x1);
+            if intersect {
+                inside = !inside;
+            }
+        }
+
+        inside
     }
 
     fn axis_aligned_bounding_box(&self) -> Polygon2D<4, f32> {
@@ -74,11 +139,18 @@ impl<const N: usize> Shape2D<N, f32> for Polygon2D<N, f32> {
     }
 
     fn points(&self) -> &[Point2D<f32>] {
-        todo!()
+        self.points.as_slice()
     }
 
-    fn edges(&self) -> [Line2D<f32>; N] {
-        todo!()
+    fn edges(&self) -> ArrayVec<Line2D<f32>, N> {
+        let mut edges = ArrayVec::new();
+        for i in 0..self.points.len() {
+            edges.push(Line2D::new(
+                self.points[i],
+                self.points[(i + 1) % self.points.len()],
+            ));
+        }
+        edges
     }
 }
 
@@ -118,6 +190,7 @@ mod test {
 }
 
 impl<const N: usize, T> Polygon2D<N, T> {
+    /// Resize the polygon to a new size
     pub fn resize<const M: usize>(self) -> Result<Polygon2D<M, T>, ()> {
         if self.points.len() > M {
             return Err(());

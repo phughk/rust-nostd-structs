@@ -1,5 +1,6 @@
 use crate::structs::geom::point_2d::Point2D;
 use crate::structs::geom::{Line2D, Polygon2D, Shape2D};
+use arrayvec::ArrayVec;
 
 /// A triangle in 2D space
 #[cfg_attr(test, derive(Debug))]
@@ -126,12 +127,12 @@ impl Shape2D<3, f32> for Triangle2D<f32> {
         &self.points
     }
 
-    fn edges(&self) -> [Line2D<f32>; 3] {
-        [
+    fn edges(&self) -> ArrayVec<Line2D<f32>, 3> {
+        ArrayVec::from([
             Line2D::new(self.points[0], self.points[1]),
             Line2D::new(self.points[1], self.points[2]),
             Line2D::new(self.points[1], self.points[0]),
-        ]
+        ])
     }
 }
 
@@ -235,11 +236,15 @@ impl Shape2D<3, f64> for Triangle2D<f64> {
     }
 
     fn points(&self) -> &[Point2D<f64>] {
-        todo!()
+        &self.points
     }
 
-    fn edges(&self) -> [Line2D<f64>; 3] {
-        todo!()
+    fn edges(&self) -> ArrayVec<Line2D<f64>, 3> {
+        ArrayVec::from([
+            Line2D::new(self.points[0], self.points[1]),
+            Line2D::new(self.points[1], self.points[2]),
+            Line2D::new(self.points[1], self.points[0]),
+        ])
     }
 }
 
