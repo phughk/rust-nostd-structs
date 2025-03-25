@@ -69,7 +69,7 @@ pub const fn vflip_1bpp_single(data: u8) -> u8 {
 }
 
 /// Flip 1-bit, 8-pixel array
-pub fn vflip_1bpp_mut(mut data: &mut [u8]) {
+pub fn vflip_1bpp_mut(data: &mut [u8]) {
     for i in data.iter_mut() {
         *i = vflip_1bpp_single(*i);
     }
@@ -110,7 +110,7 @@ mod tests {
 
     #[test]
     pub fn test_vflip_1bpp() {
-        let mut data: [u8; 4] = [0b1111_0000, 0b0000_1111, 0b1010_1010, 0b0101_0101];
+        let data: [u8; 4] = [0b1111_0000, 0b0000_1111, 0b1010_1010, 0b0101_0101];
         let data = vflip_1bpp_const(data);
         assert_eq!(
             data,

@@ -8,8 +8,9 @@
 //! and dimensions they need, and conveniently apply them to the algorithms, without having to write
 //! Into traits for tuples or arrays.
 
-mod lru_map;
-mod rtree;
+pub mod geom;
+pub mod lru_map;
+pub mod trig;
 
 pub use lru_map::LruMap;
 
