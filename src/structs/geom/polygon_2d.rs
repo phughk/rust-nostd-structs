@@ -1,9 +1,10 @@
-use crate::algos::slice::insertion_sort_by;
+use super::misc::polygon_area_shoelace;
 use crate::structs::geom::point_2d::Point2D;
 use crate::structs::geom::{Line2D, Shape2D};
 use arrayvec::ArrayVec;
 
 /// An N-polygon in 2D space
+#[derive(Clone)]
 #[cfg_attr(test, derive(Debug))]
 pub struct Polygon2D<const N: usize, T> {
     /// Points of the polygon
@@ -53,7 +54,7 @@ impl<const N: usize> Shape2D<N, f32> for Polygon2D<N, f32> {
     }
 
     fn surface(&self) -> f32 {
-        super::misc::polygon_area_shoelace(&self.points)
+        polygon_area_shoelace(&self.points)
     }
 
     fn center(&self) -> Point2D<f32> {
@@ -137,71 +138,6 @@ impl<const N: usize> Shape2D<N, f32> for Polygon2D<N, f32> {
         todo!()
     }
 
-    /// Graham's scan algorithm to find the convex hull of the polygon
-    fn convex_hull_with_other_shape<
-        const NEW_SZ: usize,
-        const OTHER_SZ: usize,
-        SHAPE: Shape2D<OTHER_SZ, f32>,
-    >(
-        &self,
-        other_shape: SHAPE,
-    ) -> Polygon2D<NEW_SZ, f32> {
-        let mut points: ArrayVec<Point2D<f32>, NEW_SZ> = ArrayVec::new();
-        for p in &self.points {
-            points.push(*p);
-        }
-        for p in other_shape.points() {
-            points.push(*p);
-        }
-        if points.len() <= 3 {
-            return Polygon2D { points };
-        }
-
-        // 1. Find the lowest point
-        let pivot_idx = points
-            .iter()
-            .enumerate()
-            .min_by(|(_, a), (_, b)| {
-                a.y.partial_cmp(&b.y)
-                    .unwrap()
-                    .then(a.x.partial_cmp(&b.x).unwrap())
-            })
-            .unwrap()
-            .0;
-
-        let pivot = points[pivot_idx];
-        points.swap(0, pivot_idx);
-
-        // 2. Sort points by polar angle w.r.t. pivot
-        insertion_sort_by(&mut points[1..], |a, b| {
-            let o = super::misc::orientation(&pivot, a, b);
-            if o == 0.0 {
-                // Collinear: closer one comes first
-                let da = Point2D::new(a.x - pivot.x, a.y - pivot.y).hypotenuse();
-                let db = Point2D::new(b.x - pivot.x, b.y - pivot.y).hypotenuse();
-                da.partial_cmp(&db).unwrap()
-            } else {
-                o.partial_cmp(&0.0).unwrap().reverse() // CCW first
-            }
-        });
-
-        // 3. Build the convex hull using a stack
-        let mut stack: ArrayVec<Point2D<f32>, NEW_SZ> = ArrayVec::new();
-        stack.extend([points[0], points[1]]);
-
-        for &p in points.iter().skip(2) {
-            while stack.len() >= 2
-                && super::misc::orientation(&stack[stack.len() - 2], &stack[stack.len() - 1], &p)
-                    <= 0.0
-            {
-                stack.pop();
-            }
-            stack.push(p);
-        }
-
-        Polygon2D { points: stack }
-    }
-
     fn points(&self) -> &[Point2D<f32>] {
         self.points.as_slice()
     }
@@ -282,7 +218,7 @@ mod test {
             ]),
         };
 
-        let convex = first.convex_hull_with_other_shape::<7, 3, _>(second);
+        let convex = first.convex_hull_with_other_shape::<7, 3, _>(&second);
         let mut points = ArrayVec::<Point2D<f32>, 7>::new();
         points.push(Point2D::new(0.0, 0.0));
         points.push(Point2D::new(4.0, 0.0));

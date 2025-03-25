@@ -1,5 +1,5 @@
 use crate::structs::geom::point_2d::Point2D;
-use crate::structs::geom::{Line2D, Polygon2D, Shape2D};
+use crate::structs::geom::{Line2D, Shape2D};
 use arrayvec::ArrayVec;
 
 /// A triangle in 2D space
@@ -25,28 +25,12 @@ impl<T: PartialEq> PartialEq for Triangle2D<T> {
 }
 
 impl Shape2D<3, f32> for Triangle2D<f32> {
-    fn rotate_deg(mut self, point: Point2D<f32>, degrees: f32) -> Self {
-        self.rotate_rad_mut(point, degrees);
-        self
-    }
-
     fn rotate_deg_mut(&mut self, point2d: Point2D<f32>, degrees: f32) {
         super::misc::rotate_deg_mut(&mut self.points, point2d, degrees);
     }
 
-    fn rotate_rad(self, point2d: Point2D<f32>, radians: f32) -> Self {
-        todo!()
-    }
-
     fn rotate_rad_mut(&mut self, point2d: Point2D<f32>, radians: f32) {
         todo!()
-    }
-
-    fn surface(&self) -> f32 {
-        let a = &self.points[0];
-        let b = &self.points[1];
-        let c = &self.points[2];
-        0.5 * ((a.x * (b.y - c.y)) + (b.x * (c.y - a.y)) + (c.x * (a.y - b.y))).abs()
     }
 
     fn center(&self) -> Point2D<f32> {
@@ -108,21 +92,6 @@ impl Shape2D<3, f32> for Triangle2D<f32> {
         point_in_triangle
     }
 
-    fn axis_aligned_bounding_box(&self) -> Polygon2D<4, f32> {
-        todo!()
-    }
-
-    fn convex_hull_with_other_shape<
-        const NEW_SZ: usize,
-        const OTHER_SZ: usize,
-        SHAPE: Shape2D<OTHER_SZ, f32>,
-    >(
-        &self,
-        other_shape: SHAPE,
-    ) -> Polygon2D<NEW_SZ, f32> {
-        todo!()
-    }
-
     fn points(&self) -> &[Point2D<f32>] {
         &self.points
     }
@@ -137,28 +106,12 @@ impl Shape2D<3, f32> for Triangle2D<f32> {
 }
 
 impl Shape2D<3, f64> for Triangle2D<f64> {
-    fn rotate_deg(mut self, point2d: Point2D<f64>, degrees: f64) -> Self {
-        self.rotate_rad_mut(point2d, degrees);
-        self
-    }
-
     fn rotate_deg_mut(&mut self, point2d: Point2D<f64>, degrees: f64) {
         super::misc::rotate_deg_mut(&mut self.points, point2d, degrees);
     }
 
-    fn rotate_rad(self, point2d: Point2D<f64>, radians: f64) -> Self {
-        todo!()
-    }
-
     fn rotate_rad_mut(&mut self, point2d: Point2D<f64>, radians: f64) {
         todo!()
-    }
-
-    fn surface(&self) -> f64 {
-        let a = &self.points[0];
-        let b = &self.points[1];
-        let c = &self.points[2];
-        0.5 * ((a.x * (b.y - c.y)) + (b.x * (c.y - a.y)) + (c.x * (a.y - b.y))).abs()
     }
 
     fn center(&self) -> Point2D<f64> {
@@ -218,21 +171,6 @@ impl Shape2D<3, f64> for Triangle2D<f64> {
 
         let point_in_triangle = u >= 0.0 && v >= 0.0 && (u + v) <= 1.0;
         point_in_triangle
-    }
-
-    fn axis_aligned_bounding_box(&self) -> Polygon2D<4, f64> {
-        todo!()
-    }
-
-    fn convex_hull_with_other_shape<
-        const NEW_SZ: usize,
-        const OTHER_SZ: usize,
-        SHAPE: Shape2D<OTHER_SZ, f64>,
-    >(
-        &self,
-        other_shape: SHAPE,
-    ) -> Polygon2D<NEW_SZ, f64> {
-        todo!()
     }
 
     fn points(&self) -> &[Point2D<f64>] {
