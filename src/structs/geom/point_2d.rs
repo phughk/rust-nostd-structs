@@ -1,4 +1,5 @@
-use core::ops::Add;
+use crate::structs::trig::sqrt;
+use core::ops::{Add, Div};
 use core::ops::{Mul, Sub};
 
 /// A point in n-dimensional space.
@@ -59,6 +60,25 @@ impl<T> Point2D<T> {
         x + y
     }
 
+    /// Hypotenuse of the point.
+    /// The hypotenuse is the distance of a point from (0,0)
+    pub fn hypotenuse(&self) -> T
+    where
+        T: PartialOrd
+            + From<f32>
+            + Div<Output = T>
+            + Mul<Output = T>
+            + Add<Output = T>
+            + Sub<Output = T>
+            + Copy,
+    {
+        let d = self.distance_squared(&Point2D {
+            x: T::from(0.0),
+            y: T::from(0.0),
+        });
+        sqrt(d, 20).unwrap()
+    }
+
     /// Dot product of two points
     pub fn dot(&self, other: &Self) -> T
     where
@@ -67,5 +87,13 @@ impl<T> Point2D<T> {
         let x = self.x * other.x;
         let y = self.y * other.y;
         x + y
+    }
+
+    /// Cross product of two points
+    pub fn cross(&self, other: &Self) -> T
+    where
+        T: Mul<Output = T> + Sub<Output = T> + Copy,
+    {
+        self.x * other.y - self.y * other.x
     }
 }

@@ -51,3 +51,13 @@ where
 
     half * sum
 }
+
+pub fn orientation<T: Sub<Output = T> + Copy + Mul<Output = T>>(
+    a: &Point2D<T>,
+    b: &Point2D<T>,
+    c: &Point2D<T>,
+) -> T {
+    let ab = b - a;
+    let ac = c - a;
+    ab.cross(&ac)
+}
