@@ -9013,10 +9013,16 @@ pub const PI: f64 = 3.14;
 /// Basically 1 radian (ratio of 1 degrees to pi)
 pub const DEGREE_TO_PI: f64 = 180.0 / PI;
 
-/// Get the sin value from literal degrees, so 45u8 for 45 degrees and 360u8 is the same as 0u8
+/// Get the sin value from literal degrees, so 45.0 for 45 degrees and sin(360.0) is the same as sin(0.0)
 pub fn sin_degrees(degrees: f64) -> f64 {
     let degrees = (degrees * 100.0) as usize % 36000;
     SIN_LUT[degrees]
+}
+
+/// Get the sin value from literal radians, so 0.7853981633974483 for 45 degrees
+pub fn sin_radians(radians: f64) -> f64 {
+    let degrees = radians * (180.0 / core::f64::consts::PI);
+    sin_degrees(degrees)
 }
 
 #[cfg(test)]

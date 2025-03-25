@@ -23,13 +23,10 @@ pub trait Shape2D<const SZ: usize, T> {
     fn closest_point(&self, point: Point2D<T>) -> Point2D<T>;
 
     /// True if the provide point is in the shape
-    fn point_in_shape(&self) -> bool;
+    fn point_in_shape(&self, point: Point2D<T>) -> bool;
 
     /// Axis-aligned bounding box of the shape
     fn axis_aligned_bounding_box(&self) -> Polygon2D<4, T>;
-
-    /// Convex hull of the shape
-    fn convex_hull<const NewSZ: usize>(&self) -> Polygon2D<NewSZ, T>;
 
     /// Convex hull from 2 shapes
     fn convex_hull_with_other_shape<
