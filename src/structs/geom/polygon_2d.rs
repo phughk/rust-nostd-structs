@@ -290,14 +290,7 @@ mod test {
         points.push(Point2D::new(7.0, 12.0));
         points.push(Point2D::new(0.0, 4.0));
 
+        // https://www.desmos.com/calculator/cfplirl5bp
         assert_eq!(convex, Polygon2D { points });
     }
 }
-
-/*
-(0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 4.0), (0.0, 0.0),
-
-(8.0, 10.0), (7.0, 12.0), (5.0, 9.0), (8.0, 10.0),
-
-(0.0, 0.0), (4.0, 0.0), (8.0, 10.0), (7.0, 12.0), (0.0, 4.0), (0.0, 0.0),
- */
