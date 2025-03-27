@@ -7,39 +7,12 @@ mod sqrt;
 mod tan;
 mod tan_lut;
 
+use crate::structs::AsType;
 use core::ops::{Add, Mul};
 pub use cos::cos_degrees;
 pub use sin::sin_degrees;
 pub use sqrt::sqrt;
 pub use tan::tan_degrees;
-
-/// A convenient way to cast between 2 types
-pub trait AsType<T> {
-    /// Convert from type T to Self
-    fn from_type(t: T) -> Self;
-    /// Convert from Self to type T
-    fn into_type(self) -> T;
-}
-
-impl AsType<f32> for f32 {
-    fn from_type(t: f32) -> Self {
-        t
-    }
-
-    fn into_type(self) -> f32 {
-        self
-    }
-}
-
-impl AsType<f32> for f64 {
-    fn from_type(t: f32) -> Self {
-        t as f64
-    }
-
-    fn into_type(self) -> f32 {
-        self as f32
-    }
-}
 
 pub(super) fn trig_from_lut<T>(degrees_direct: T, lut: &[f32]) -> T
 where

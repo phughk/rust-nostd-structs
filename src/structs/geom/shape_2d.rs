@@ -1,8 +1,10 @@
 use super::misc::convex_hull;
+use crate::structs::algebra::LinearEquation;
 use crate::structs::geom::point_2d::Point2D;
 use crate::structs::geom::{Line2D, Polygon2D};
+use crate::structs::AsType;
 use arrayvec::ArrayVec;
-use core::ops::{Add, Div, Mul, Sub};
+use core::ops::{Add, Div, Mul, Neg, Sub};
 
 /// Methods for handling a shape in 2D space
 pub trait Shape2D<const SZ: usize, T> {
@@ -132,4 +134,67 @@ pub trait Shape2D<const SZ: usize, T> {
 
     /// Edges of the shape
     fn edges(&self) -> ArrayVec<Line2D<T>, SZ>;
+
+    /// Project this polygon onto another shape
+    fn project_onto_polygon<const N: usize, SHAPE: Shape2D<N, T>>(&self, other: &SHAPE) -> Line2D<T>
+    where
+        T: Copy
+            + Sub<Output = T>
+            + Div<Output = T>
+            + Mul<Output = T>
+            + Add<Output = T>
+            + Neg<Output = T>
+            + PartialEq
+            + AsType<f32>
+            + PartialOrd,
+    {
+        // Get a vector between the 2 shapes
+        let self_center = self.center();
+        let other_center = other.center();
+        let line_between = LinearEquation::from_2_points(
+            (self_center.x, self_center.y),
+            (other_center.x, other_center.y),
+        );
+
+        // Derive the plane we are projecting onto
+        let plane = line_between.orthogonal_at_point(other_center.x, other_center.y);
+
+        // Get the 2D line of the target surface
+        let other_points = other.points();
+        let other_projection = project_onto_plane(other_points, &plane);
+
+        // Get the 2D line of this polygon onto the surface
+        let self_points = self.points();
+        let self_projection = project_onto_plane(self_points, &plane);
+
+        todo!()
+    }
+}
+
+fn project_onto_plane<T>(points: &[Point2D<T>], plane: &LinearEquation<T>) -> Line2D<T>
+where
+    T: Copy
+        + Sub<Output = T>
+        + Div<Output = T>
+        + Mul<Output = T>
+        + Add<Output = T>
+        + Neg<Output = T>
+        + PartialEq
+        + AsType<f32>
+        + PartialOrd,
+{
+    let (x, _) = plane.project_onto(points[0].x, points[0].y);
+    let mut x_min = x;
+    let mut x_max = x;
+    for i in 1..points.len() {
+        let (x, _) = plane.project_onto(points[i].x, points[i].y);
+        if x < x_min {
+            x_min = x;
+        } else if x > x_max {
+            x_max = x;
+        }
+    }
+    let y_min = plane.y(x_min).unwrap();
+    let y_max = plane.y(x_max).unwrap();
+    Line2D::new(Point2D::new(x_min, y_min), Point2D::new(x_max, y_max))
 }

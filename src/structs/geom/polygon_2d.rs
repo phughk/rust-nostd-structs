@@ -125,10 +125,6 @@ impl<const N: usize> Shape2D<N, f32> for Polygon2D<N, f32> {
         inside
     }
 
-    fn axis_aligned_bounding_box(&self) -> Polygon2D<4, f32> {
-        todo!()
-    }
-
     fn points(&self) -> &[Point2D<f32>] {
         self.points.as_slice()
     }
