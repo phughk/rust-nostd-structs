@@ -1,10 +1,10 @@
 use crate::structs::trig::sqrt;
+use core::cmp::Ordering;
 use core::ops::{Add, Div};
 use core::ops::{Mul, Sub};
 
 /// A point in n-dimensional space.
-#[derive(Clone, Copy)]
-#[cfg_attr(test, derive(Debug))]
+#[derive(Debug, Clone, Copy)]
 pub struct Point2D<T> {
     /// X-axis value
     pub x: T,
@@ -12,12 +12,26 @@ pub struct Point2D<T> {
     pub y: T,
 }
 
-impl<T> PartialEq for &Point2D<T>
+impl<T> PartialEq for Point2D<T>
 where
     T: PartialEq,
 {
     fn eq(&self, other: &Self) -> bool {
         &self.x == &other.x && &self.y == &other.y
+    }
+}
+
+impl<T> PartialOrd for Point2D<T>
+where
+    T: PartialOrd,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        let x_cmp = self.x.partial_cmp(&other.x);
+        if x_cmp == Some(Ordering::Equal) {
+            self.y.partial_cmp(&other.y)
+        } else {
+            x_cmp
+        }
     }
 }
 

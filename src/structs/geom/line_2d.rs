@@ -6,9 +6,20 @@ use core::ops::{Add, Mul};
 use core::ops::{Div, Sub};
 
 /// A 2D line
+#[derive(Debug, Clone, Copy)]
 pub struct Line2D<T> {
     /// The 2 points of the line
     pub points: [Point2D<T>; 2],
+}
+
+impl<T> PartialEq for Line2D<T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        (self.points[0] == other.points[0] && self.points[1] == other.points[1])
+            || (self.points[0] == other.points[1] && self.points[1] == other.points[0])
+    }
 }
 
 impl<T> Line2D<T> {
@@ -94,9 +105,8 @@ impl<T> Line2D<T> {
         self.points[0].dot(&self.points[1])
     }
 
-    /// Returns the remaining line and an additional line if the split happened in the middle
-    /// No lines are returned if there is no overlap
-    pub fn overlap(&self, other: &Self) -> (Option<Line2D<T>>, Option<Line2D<T>>)
+    /// Returns the overlap of 2 lines
+    pub fn overlap(&self, other: &Self) -> Option<Line2D<T>>
     where
         T: Copy
             + Sub<Output = T>
@@ -112,54 +122,157 @@ impl<T> Line2D<T> {
             (self.points[0].x, self.points[0].y),
             (self.points[1].x, self.points[1].y),
         );
-        let projected_start = plane.project_onto(other.points[0].x, other.points[0].y);
-        let projected_end = plane.project_onto(other.points[1].x, other.points[1].y);
-        let projected = Line2D::new(
-            Point2D::new(projected_start.0, projected_start.1),
-            Point2D::new(projected_end.0, projected_end.1),
-        );
-        let sizes = [
-            self.points[0].x,
-            self.points[1].x,
-            projected.points[0].x,
-            projected.points[1].x,
-        ];
-        let mut smallest = sizes[0];
-        let mut largest = sizes[0];
-        for candidate in 1..4 {
-            if sizes[candidate] < smallest {
-                smallest = sizes[candidate];
-            }
-            if sizes[candidate] > largest {
-                largest = sizes[candidate];
-            }
+        let e = other.earlier();
+        let projected_start = plane.project_onto(e.x, e.y);
+        let projected_start = Point2D::new(projected_start.0, projected_start.1);
+        let e = other.later();
+        let projected_end = plane.project_onto(e.x, e.y);
+        let projected_end = Point2D::new(projected_end.0, projected_end.1);
+        let mut new_start = *self.earlier();
+        let mut new_end = *self.later();
+        if &projected_start > self.earlier() {
+            new_start = projected_start;
         }
-        let starts_after = smallest < self.earlier().x;
-        let ends_before = largest > self.later().x;
-        match (starts_after, ends_before) {
-            (true, true) => (
-                // The entire line is inside the other line
-                Some(Line2D {
-                    points: self.points,
-                }),
-                None,
-            ),
-            (false, false) => (
-                // The other line splits this in 2
-                Some(Line2D {
-                    points: [*self.earlier(), *projected.earlier()],
-                }),
-                Some(Line2D {
-                    points: [*projected.later(), *self.later()],
-                }),
-            ),
-            (true, false) => (
-                Some(Line2D {
-                    points: [*self.earlier(), *projected.earlier()],
-                }),
-                None,
-            ),
-            (false, true) => todo!(),
+        if &projected_end < self.later() {
+            new_end = projected_end;
+        }
+        if new_start.x > new_end.x {
+            return None;
+        }
+        Some(Line2D::new(new_start, new_end))
+    }
+
+    /// Subtracts the overlap of 2 lines
+    pub fn subtract(&self, other: &Self) -> (Line2D<T>, Option<Line2D<T>>)
+    where
+        T: Copy
+            + Sub<Output = T>
+            + Div<Output = T>
+            + Mul<Output = T>
+            + Add<Output = T>
+            + Neg<Output = T>
+            + PartialEq
+            + PartialOrd
+            + AsType<f32>,
+    {
+        let diff = self.overlap(other);
+        if let None = diff {
+            return (*self, None);
+        }
+        let diff = diff.unwrap();
+        let start_is_different = {
+            let p1 = diff.earlier();
+            let p2 = self.earlier();
+            p1.x != p2.x || p1.y != p2.y
+        };
+        let end_is_different = {
+            let p1 = diff.later();
+            let p2 = self.later();
+            p1.x != p2.x || p1.y != p2.y
+        };
+        match (start_is_different, end_is_different) {
+            (false, false) => unreachable!(),
+            (false, true) => {
+                // We only take the first half
+                (Line2D::new(*diff.later(), *self.later()), None)
+            }
+            (true, false) => {
+                // We only take the second half
+                (Line2D::new(*self.earlier(), *diff.earlier()), None)
+            }
+            (true, true) => {
+                // We have 2 lines split by the overlap
+                let first_half = Line2D::new(*self.earlier(), *diff.earlier());
+                let second_half = Line2D::new(*diff.later(), *self.later());
+                (first_half, Some(second_half))
+            }
         }
     }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::structs::geom::{Line2D, Point2D};
+
+    #[test]
+    fn test_overlap() {
+        let l1 = Line2D::new(Point2D::new(-5.0, 1.0), Point2D::new(5.0, 1.0));
+        let l2 = Line2D::new(Point2D::new(-7.0, -3.0), Point2D::new(4.0, 7.0));
+        let overlap = l1.overlap(&l2);
+        assert_eq!(
+            overlap,
+            Some(Line2D::new(Point2D::new(-5.0, 1.0), Point2D::new(4.0, 1.0)))
+        );
+    }
+
+    #[test]
+    fn test_overlap_vertical() {
+        let l1 = Line2D::new(Point2D::new(-5.0, -10.0), Point2D::new(-5.0, 10.0));
+        let l2 = Line2D::new(Point2D::new(-7.0, -3.0), Point2D::new(4.0, 7.0));
+        let overlap = l1.overlap(&l2);
+        assert_eq!(
+            overlap,
+            Some(Line2D::new(
+                Point2D::new(-5.0, -3.0),
+                Point2D::new(-5.0, 7.0)
+            ))
+        );
+    }
+
+    #[test]
+    fn test_subtract_left() {
+        let l1 = Line2D::new(Point2D::new(-5.0, 1.0), Point2D::new(5.0, 1.0));
+        let l2 = Line2D::new(Point2D::new(-7.0, -3.0), Point2D::new(4.0, 7.0));
+        let (sub1, sub2) = l1.subtract(&l2);
+        assert_eq!(sub2, None);
+        assert_eq!(
+            sub1,
+            Line2D::new(Point2D::new(4.0, 1.0), Point2D::new(5.0, 1.0))
+        );
+    }
+
+    #[test]
+    fn test_subtract_right() {
+        let l1 = Line2D::new(Point2D::new(-5.0, 1.0), Point2D::new(5.0, 1.0));
+        let l2 = Line2D::new(Point2D::new(-3.0, -3.0), Point2D::new(6.0, 7.0));
+        let (sub1, sub2) = l1.subtract(&l2);
+        assert_eq!(sub2, None);
+        assert_eq!(
+            sub1,
+            Line2D::new(Point2D::new(-5.0, 1.0), Point2D::new(-3.0, 1.0))
+        );
+    }
+
+    #[test]
+    fn test_subtract_middle() {
+        let l1 = Line2D::new(Point2D::new(-5.0, 1.0), Point2D::new(5.0, 1.0));
+        let l2 = Line2D::new(Point2D::new(-3.0, -3.0), Point2D::new(2.0, 7.0));
+        let (sub1, sub2) = l1.subtract(&l2);
+        assert_eq!(
+            sub1,
+            Line2D::new(Point2D::new(-5.0, 1.0), Point2D::new(-3.0, 1.0))
+        );
+        assert_eq!(
+            sub2,
+            Some(Line2D::new(Point2D::new(2.0, 1.0), Point2D::new(5.0, 1.0)))
+        )
+    }
+
+    #[test]
+    fn test_subtract_vertical_left() {
+        let l1 = Line2D::new(Point2D::new(-5.0, -3.0), Point2D::new(-5.0, 10.0));
+        let l2 = Line2D::new(Point2D::new(-7.0, -4.0), Point2D::new(4.0, 7.0));
+        let (sub1, sub2) = l1.subtract(&l2);
+        assert_eq!(sub2, None);
+        assert_eq!(
+            sub1,
+            Line2D::new(Point2D::new(-5.0, 7.0), Point2D::new(-5.0, 10.0))
+        );
+    }
+
+    #[test]
+    fn test_subtract_vertical_right() {}
+
+    #[test]
+    fn test_subtract_vertical_middle() {}
 }

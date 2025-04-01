@@ -161,11 +161,11 @@ pub trait Shape2D<const SZ: usize, T> {
 
         // Get the 2D line of the target surface
         let other_points = other.points();
-        let other_projection = project_onto_plane(other_points, &plane);
+        let _other_projection = project_onto_plane(other_points, &plane);
 
         // Get the 2D line of this polygon onto the surface
         let self_points = self.points();
-        let self_projection = project_onto_plane(self_points, &plane);
+        let _self_projection = project_onto_plane(self_points, &plane);
 
         todo!()
     }

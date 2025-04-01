@@ -245,14 +245,14 @@ mod test {
             })
             .prop_filter(
                 "Points on original line must be unique",
-                |(x1, x2, y1, y2, t1, tx1, ty1, tx2, ty2)| {
+                |(x1, x2, y1, y2, _t1, _tx1, _ty1, _tx2, _ty2)| {
                     // Points on original line must be different
                     x1 != x2 || y1 != y2
                 },
             )
             .prop_filter(
                 "Points on orthogonal line must be unique",
-                |(x1, x2, y1, y2, t1, tx1, ty1, tx2, ty2)| {
+                |(_x1, _x2, _y1, _y2, _t1, tx1, ty1, tx2, ty2)| {
                     // Points on orthogonal line must be different
                     tx1 != tx2 || ty1 != ty2
                 },
@@ -286,8 +286,10 @@ mod test {
         // Generate points on orthogonal line
         let (ox1, oy1) = orth.project_onto(input.tx1, input.ty1);
         let (ox2, oy2) = orth.project_onto(input.tx2, input.ty2);
+        // Generate projections onto original
         let (p1x, p1y) = original.project_onto(ox1, oy1);
         let (p2x, p2y) = original.project_onto(ox2, oy2);
+        // Projected points should be identical
         assert!(float_equal(p1x, p2x, 0.001), "{} != {}", p1x, p2x);
         assert!(float_equal(p1y, p2y, 0.001), "{} != {}", p1y, p2y);
     }
