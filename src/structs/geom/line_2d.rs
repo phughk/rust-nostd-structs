@@ -143,7 +143,7 @@ impl<T> Line2D<T> {
     }
 
     /// Subtracts the overlap of 2 lines
-    pub fn subtract(&self, other: &Self) -> (Line2D<T>, Option<Line2D<T>>)
+    pub fn subtract(&self, other: &Self) -> (Option<Line2D<T>>, Option<Line2D<T>>)
     where
         T: Copy
             + Sub<Output = T>
@@ -157,7 +157,7 @@ impl<T> Line2D<T> {
     {
         let diff = self.overlap(other);
         if let None = diff {
-            return (*self, None);
+            return (Some(*self), None);
         }
         let diff = diff.unwrap();
         let start_is_different = {
@@ -171,20 +171,24 @@ impl<T> Line2D<T> {
             p1.x != p2.x || p1.y != p2.y
         };
         match (start_is_different, end_is_different) {
-            (false, false) => unreachable!(),
+            (false, false) => {
+                // This happens when the difference is the same as the line
+                // So the entire line is subtracted, resulting in no lines
+                (None, None)
+            }
             (false, true) => {
                 // We only take the first half
-                (Line2D::new(*diff.later(), *self.later()), None)
+                (Some(Line2D::new(*diff.later(), *self.later())), None)
             }
             (true, false) => {
                 // We only take the second half
-                (Line2D::new(*self.earlier(), *diff.earlier()), None)
+                (Some(Line2D::new(*self.earlier(), *diff.earlier())), None)
             }
             (true, true) => {
                 // We have 2 lines split by the overlap
                 let first_half = Line2D::new(*self.earlier(), *diff.earlier());
                 let second_half = Line2D::new(*diff.later(), *self.later());
-                (first_half, Some(second_half))
+                (Some(first_half), Some(second_half))
             }
         }
     }
@@ -227,7 +231,7 @@ mod test {
         assert_eq!(sub2, None);
         assert_eq!(
             sub1,
-            Line2D::new(Point2D::new(4.0, 1.0), Point2D::new(5.0, 1.0))
+            Some(Line2D::new(Point2D::new(4.0, 1.0), Point2D::new(5.0, 1.0)))
         );
     }
 
@@ -239,7 +243,10 @@ mod test {
         assert_eq!(sub2, None);
         assert_eq!(
             sub1,
-            Line2D::new(Point2D::new(-5.0, 1.0), Point2D::new(-3.0, 1.0))
+            Some(Line2D::new(
+                Point2D::new(-5.0, 1.0),
+                Point2D::new(-3.0, 1.0)
+            ))
         );
     }
 
@@ -250,7 +257,10 @@ mod test {
         let (sub1, sub2) = l1.subtract(&l2);
         assert_eq!(
             sub1,
-            Line2D::new(Point2D::new(-5.0, 1.0), Point2D::new(-3.0, 1.0))
+            Some(Line2D::new(
+                Point2D::new(-5.0, 1.0),
+                Point2D::new(-3.0, 1.0)
+            ))
         );
         assert_eq!(
             sub2,
@@ -266,13 +276,58 @@ mod test {
         assert_eq!(sub2, None);
         assert_eq!(
             sub1,
-            Line2D::new(Point2D::new(-5.0, 7.0), Point2D::new(-5.0, 10.0))
+            Some(Line2D::new(
+                Point2D::new(-5.0, 7.0),
+                Point2D::new(-5.0, 10.0)
+            ))
         );
     }
 
     #[test]
-    fn test_subtract_vertical_right() {}
+    fn test_subtract_vertical_right() {
+        let l1 = Line2D::new(Point2D::new(5.0, 1.0), Point2D::new(5.0, 10.0));
+        let l2 = Line2D::new(Point2D::new(-3.0, 4.0), Point2D::new(6.0, 12.0));
+        let (sub1, sub2) = l1.subtract(&l2);
+        assert_eq!(sub2, None);
+        assert_eq!(
+            sub1,
+            Some(Line2D::new(Point2D::new(5.0, 1.0), Point2D::new(5.0, 4.0)))
+        );
+    }
 
     #[test]
-    fn test_subtract_vertical_middle() {}
+    fn test_subtract_vertical_middle() {
+        let l1 = Line2D::new(Point2D::new(5.0, -10.0), Point2D::new(5.0, 10.0));
+        let l2 = Line2D::new(Point2D::new(-3.0, 4.0), Point2D::new(6.0, 7.0));
+        let (sub1, sub2) = l1.subtract(&l2);
+        assert_eq!(
+            sub1,
+            Some(Line2D::new(
+                Point2D::new(5.0, -10.0),
+                Point2D::new(5.0, 4.0)
+            ))
+        );
+        assert_eq!(
+            sub2,
+            Some(Line2D::new(Point2D::new(5.0, 7.0), Point2D::new(5.0, 10.0)))
+        );
+    }
+
+    #[test]
+    fn test_subtract_larger() {
+        let l1 = Line2D::new(Point2D::new(-5.0, -3.0), Point2D::new(5.0, 10.0));
+        let l2 = Line2D::new(Point2D::new(-7.0, -4.0), Point2D::new(10.0, 20.0));
+        let (sub1, sub2) = l1.subtract(&l2);
+        assert_eq!(sub2, None);
+        assert_eq!(sub1, None);
+    }
+
+    #[test]
+    fn test_subtract_larger_vertical() {
+        let l1 = Line2D::new(Point2D::new(-5.0, -3.0), Point2D::new(-5.0, 10.0));
+        let l2 = Line2D::new(Point2D::new(-7.0, -4.0), Point2D::new(10.0, 20.0));
+        let (sub1, sub2) = l1.subtract(&l2);
+        assert_eq!(sub2, None);
+        assert_eq!(sub1, None);
+    }
 }
