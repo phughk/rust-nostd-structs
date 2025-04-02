@@ -9,6 +9,7 @@
 //! Into traits for tuples or arrays.
 
 pub mod algebra;
+pub mod game;
 pub mod geom;
 pub mod lru_map;
 pub mod trig;
@@ -42,6 +43,26 @@ impl AsType<f32> for f64 {
 
     fn into_type(self) -> f32 {
         self as f32
+    }
+}
+
+impl AsType<f64> for f32 {
+    fn from_type(t: f64) -> Self {
+        t as f32
+    }
+
+    fn into_type(self) -> f64 {
+        self as f64
+    }
+}
+
+impl AsType<f64> for f64 {
+    fn from_type(t: f64) -> Self {
+        t
+    }
+
+    fn into_type(self) -> f64 {
+        self
     }
 }
 

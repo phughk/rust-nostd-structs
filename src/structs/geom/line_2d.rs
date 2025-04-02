@@ -33,7 +33,7 @@ impl<T> Line2D<T> {
     where
         T: Copy
             + PartialOrd
-            + From<u8>
+            + AsType<f32>
             + Sub<Output = T>
             + Div<Output = T>
             + Mul<Output = T>
@@ -47,8 +47,8 @@ impl<T> Line2D<T> {
         let t = ap.dot(&ab) / ab.dot(&ab);
 
         let t_clamped = {
-            let zero = T::from(0u8);
-            let one = T::from(1u8);
+            let zero = T::from_type(0.0);
+            let one = T::from_type(1.0);
             if t < zero {
                 zero
             } else if t > one {
@@ -105,6 +105,31 @@ impl<T> Line2D<T> {
         self.points[0].dot(&self.points[1])
     }
 
+    /// Get the length of the line in manhattan distance.
+    /// This is favourable in situations where square root is unnecessary.
+    pub fn length_manhattan(&self) -> T
+    where
+        T: Copy + Sub<Output = T> + PartialOrd + Neg<Output = T> + AsType<f32> + Add<Output = T>,
+    {
+        let dx = {
+            let dx = self.points[0].x - self.points[1].x;
+            if dx < T::from_type(0.0) {
+                -dx
+            } else {
+                dx
+            }
+        };
+        let dy = {
+            let dy = self.points[0].y - self.points[1].y;
+            if dy < T::from_type(0.0) {
+                -dy
+            } else {
+                dy
+            }
+        };
+        dx + dy
+    }
+
     /// Returns the overlap of 2 lines
     pub fn overlap(&self, other: &Self) -> Option<Line2D<T>>
     where
@@ -143,6 +168,13 @@ impl<T> Line2D<T> {
     }
 
     /// Subtracts the overlap of 2 lines
+    ///
+    /// The remaining lines after subtraction are returned.
+    ///
+    /// Two values are returned if the line was subtracted in the middle.
+    /// Otherwise, the left or right part of the line is returned if only partially covered.
+    ///
+    /// No lines are returned if the line being removed was bigger (started before, ended after) the source line.
     pub fn subtract(&self, other: &Self) -> (Option<Line2D<T>>, Option<Line2D<T>>)
     where
         T: Copy

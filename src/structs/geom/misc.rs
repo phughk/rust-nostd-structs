@@ -1,18 +1,25 @@
 use crate::algos::slice::insertion_sort_by;
 use crate::structs::geom::{Point2D, Polygon2D};
 use crate::structs::trig::{cos_degrees, sin_degrees};
+use crate::structs::AsType;
 use arrayvec::ArrayVec;
 use core::ops::{Add, Div, Mul, Sub};
 
 pub(super) fn rotate_deg_mut<
-    T: Into<f64> + Copy + Sub<Output = T> + Mul<Output = T> + From<f32> + Add<Output = T>,
+    T: AsType<f64>
+        + Copy
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + AsType<f32>
+        + Add<Output = T>
+        + PartialOrd,
 >(
     points: &mut [Point2D<T>],
     point2d: Point2D<T>,
     degrees: T,
 ) {
-    let cos_theta = T::from(cos_degrees(degrees.into()) as f32);
-    let sin_theta = T::from(sin_degrees(degrees.into()) as f32);
+    let cos_theta = cos_degrees(degrees);
+    let sin_theta = sin_degrees(degrees);
 
     // Rotate each point around the provided point
     for p in points.iter_mut() {

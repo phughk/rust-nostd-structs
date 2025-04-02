@@ -40,9 +40,9 @@ impl Shape2D<3, f32> for Triangle2D<f32> {
         Point2D::new(cx, cy)
     }
 
-    fn closest_point(&self, point: Point2D<f32>) -> Point2D<f32> {
+    fn closest_point(&self, point: &Point2D<f32>) -> Point2D<f32> {
         if self.point_in_shape(point) {
-            return point;
+            return *point;
         }
 
         // Check edges
@@ -64,14 +64,14 @@ impl Shape2D<3, f32> for Triangle2D<f32> {
         }
     }
 
-    fn point_in_shape(&self, point: Point2D<f32>) -> bool {
+    fn point_in_shape(&self, point: &Point2D<f32>) -> bool {
         let a = &self.points[0];
         let b = &self.points[1];
         let c = &self.points[2];
 
         let v0 = c - a;
         let v1 = b - a;
-        let v2 = &point - a;
+        let v2 = point - a;
 
         let dot00 = v0.dot(&v0);
         let dot01 = v0.dot(&v1);
@@ -121,9 +121,9 @@ impl Shape2D<3, f64> for Triangle2D<f64> {
         Point2D::new(cx, cy)
     }
 
-    fn closest_point(&self, point: Point2D<f64>) -> Point2D<f64> {
-        if self.point_in_shape(point) {
-            return point;
+    fn closest_point(&self, point: &Point2D<f64>) -> Point2D<f64> {
+        if self.point_in_shape(&point) {
+            return *point;
         }
 
         // Check edges
@@ -145,14 +145,14 @@ impl Shape2D<3, f64> for Triangle2D<f64> {
         }
     }
 
-    fn point_in_shape(&self, point: Point2D<f64>) -> bool {
+    fn point_in_shape(&self, point: &Point2D<f64>) -> bool {
         let a = &self.points[0];
         let b = &self.points[1];
         let c = &self.points[2];
 
         let v0 = c - a;
         let v1 = b - a;
-        let v2 = &point - a;
+        let v2 = point - a;
 
         let dot00 = v0.dot(&v0);
         let dot01 = v0.dot(&v1);

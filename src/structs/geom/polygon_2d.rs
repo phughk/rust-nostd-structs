@@ -1,7 +1,9 @@
-use super::misc::polygon_area_shoelace;
+use super::misc;
 use crate::structs::geom::point_2d::Point2D;
 use crate::structs::geom::{Line2D, Shape2D};
+use crate::structs::AsType;
 use arrayvec::ArrayVec;
+use core::ops::{Add, Div, Mul, Sub};
 
 /// An N-polygon in 2D space
 #[derive(Clone)]
@@ -35,49 +37,34 @@ impl<const N: usize, T: PartialEq> PartialEq for Polygon2D<N, T> {
     }
 }
 
-impl<const N: usize> Shape2D<N, f32> for Polygon2D<N, f32> {
-    fn rotate_deg_mut(&mut self, point: Point2D<f32>, degrees: f32) {
-        super::misc::rotate_deg_mut(&mut self.points, point, degrees);
+impl<const N: usize, T> Shape2D<N, T> for Polygon2D<N, T> {
+    fn rotate_deg_mut(&mut self, point: Point2D<T>, degrees: T)
+    where
+        T: AsType<f64>
+            + Copy
+            + Sub<Output = T>
+            + Mul<Output = T>
+            + AsType<f32>
+            + Add<Output = T>
+            + PartialOrd,
+    {
+        misc::rotate_deg_mut(self.points.as_mut(), point, degrees)
     }
 
-    fn rotate_rad_mut(&mut self, _point: Point2D<f32>, _radians: f32) {
-        todo!()
-    }
-
-    fn surface(&self) -> f32 {
-        polygon_area_shoelace(&self.points)
-    }
-
-    fn center(&self) -> Point2D<f32> {
-        let n = self.points.len();
-        assert!(n >= 3, "A polygon must have at least 3 points");
-
-        let mut area = 0.0;
-        let mut cx = 0.0;
-        let mut cy = 0.0;
-
-        for i in 0..n {
-            let p0 = &self.points[i];
-            let p1 = &self.points[(i + 1) % n];
-
-            let cross = p0.x * p1.y - p1.x * p0.y;
-            area += cross;
-            cx += (p0.x + p1.x) * cross;
-            cy += (p0.y + p1.y) * cross;
-        }
-
-        area *= 0.5;
-        let factor = 1.0 / (6.0 * area);
-
-        Point2D {
-            x: cx * factor,
-            y: cy * factor,
-        }
-    }
-
-    fn closest_point(&self, point: Point2D<f32>) -> Point2D<f32> {
+    fn closest_point(&self, point: &Point2D<T>) -> Point2D<T>
+    where
+        T: Copy
+            + PartialOrd
+            + Mul<Output = T>
+            + Add<Output = T>
+            + Sub<Output = T>
+            + AsType<f32>
+            + Div<Output = T>
+            + Mul<Output = T>
+            + Add<Output = T>,
+    {
         if self.point_in_shape(point) {
-            return point;
+            return *point;
         }
 
         assert!(
@@ -86,16 +73,19 @@ impl<const N: usize> Shape2D<N, f32> for Polygon2D<N, f32> {
         );
 
         let mut closest = None;
-        let mut min_dist = f32::MAX;
+        let mut min_dist = None;
 
         for i in 0..self.points.len() {
             let a = self.points[i];
             let b = self.points[(i + 1) % self.points.len()];
             let candidate = Line2D::new(a, b).closest_point_on_segment(&point);
             let dist = candidate.distance_squared(&point);
+            if min_dist.is_none() {
+                min_dist = Some(dist);
+            }
 
-            if dist < min_dist {
-                min_dist = dist;
+            if dist < min_dist.unwrap() {
+                min_dist = Some(dist);
                 closest = Some(candidate);
             }
         }
@@ -103,33 +93,14 @@ impl<const N: usize> Shape2D<N, f32> for Polygon2D<N, f32> {
         closest.unwrap()
     }
 
-    fn point_in_shape(&self, point: Point2D<f32>) -> bool {
-        let mut inside = false;
-        let n = self.points.len();
-
-        for i in 0..n {
-            let a = self.points[i];
-            let b = self.points[(i + 1) % n];
-
-            let (px, py) = (point.x, point.y);
-            let (x1, y1) = (a.x, a.y);
-            let (x2, y2) = (b.x, b.y);
-
-            let intersect = ((y1 > py) != (y2 > py))
-                && (px < (x2 - x1) * (py - y1) / (y2 - y1 + f32::EPSILON) + x1);
-            if intersect {
-                inside = !inside;
-            }
-        }
-
-        inside
-    }
-
-    fn points(&self) -> &[Point2D<f32>] {
+    fn points(&self) -> &[Point2D<T>] {
         self.points.as_slice()
     }
 
-    fn edges(&self) -> ArrayVec<Line2D<f32>, N> {
+    fn edges(&self) -> ArrayVec<Line2D<T>, N>
+    where
+        T: Copy,
+    {
         let mut edges = ArrayVec::new();
         for i in 0..self.points.len() {
             edges.push(Line2D::new(
