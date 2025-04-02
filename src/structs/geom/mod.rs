@@ -11,3 +11,11 @@ pub use point_2d::Point2D;
 pub use polygon_2d::Polygon2D;
 pub use shape_2d::Shape2D;
 pub use triangle_2d::Triangle2D;
+
+#[cfg(feature = "helpers")]
+/// Pretty print for easy copy-pasting into Desmos
+/// https://www.desmos.com/calculator
+pub trait PrintDesmos {
+    /// Print the object in a format that Desmos can understand
+    fn to_string_desmos(&self) -> arrayvec::ArrayString<1024>;
+}

@@ -32,9 +32,19 @@ There are lookup tables for sin, cos, and tan.
 The lookup table contains 3600 entries ranging from 0 to 2*pi.
 The granularity also allows for moderately accurate radians calculations.
 
+## Algebra
+
+### Linear equations
+
+- You can derive linear equations from 2 points.
+- You can derive an orthogonal linear equation from a linear equation at a point.
+- You can project a point onto a linear equation.
+
+Linear equations serve as planes in 2D space and can be used for various field of view calculations.
+
 ## Colour
 
 You can convert 1 bit pixels (on/off) to 5 bit pixels (16-colour mode).
-This is useful for embedde devices with limited graphics capabilities.
+This is useful for embedded devices with limited graphics capabilities.
 It also allows for high compression of graphics data in 1bpp and then transforming to colour on device when it needs to
 be rendered.

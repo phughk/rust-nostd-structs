@@ -8,6 +8,8 @@
 //! and dimensions they need, and conveniently apply them to the algorithms, without having to write
 //! Into traits for tuples or arrays.
 
+pub mod algebra;
+pub mod game;
 pub mod geom;
 pub mod lru_map;
 pub mod trig;
@@ -15,6 +17,54 @@ pub mod trig;
 pub use lru_map::LruMap;
 
 use core::ops::Add;
+
+/// A convenient way to cast between 2 types
+pub trait AsType<T> {
+    /// Convert from type T to Self
+    fn from_type(t: T) -> Self;
+    /// Convert from Self to type T
+    fn into_type(self) -> T;
+}
+
+impl AsType<f32> for f32 {
+    fn from_type(t: f32) -> Self {
+        t
+    }
+
+    fn into_type(self) -> f32 {
+        self
+    }
+}
+
+impl AsType<f32> for f64 {
+    fn from_type(t: f32) -> Self {
+        t as f64
+    }
+
+    fn into_type(self) -> f32 {
+        self as f32
+    }
+}
+
+impl AsType<f64> for f32 {
+    fn from_type(t: f64) -> Self {
+        t as f32
+    }
+
+    fn into_type(self) -> f64 {
+        self as f64
+    }
+}
+
+impl AsType<f64> for f64 {
+    fn from_type(t: f64) -> Self {
+        t
+    }
+
+    fn into_type(self) -> f64 {
+        self
+    }
+}
 
 /// A n-dimensional point that is used in the spatial data structures
 ///

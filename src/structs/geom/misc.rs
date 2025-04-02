@@ -1,16 +1,25 @@
-use crate::structs::geom::Point2D;
+use crate::algos::slice::insertion_sort_by;
+use crate::structs::geom::{Point2D, Polygon2D};
 use crate::structs::trig::{cos_degrees, sin_degrees};
-use core::ops::{Add, Mul, Sub};
+use crate::structs::AsType;
+use arrayvec::ArrayVec;
+use core::ops::{Add, Div, Mul, Sub};
 
 pub(super) fn rotate_deg_mut<
-    T: Into<f64> + Copy + Sub<Output = T> + Mul<Output = T> + From<f32> + Add<Output = T>,
+    T: AsType<f64>
+        + Copy
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + AsType<f32>
+        + Add<Output = T>
+        + PartialOrd,
 >(
     points: &mut [Point2D<T>],
     point2d: Point2D<T>,
     degrees: T,
 ) {
-    let cos_theta = T::from(cos_degrees(degrees.into()) as f32);
-    let sin_theta = T::from(sin_degrees(degrees.into()) as f32);
+    let cos_theta = cos_degrees(degrees);
+    let sin_theta = sin_degrees(degrees);
 
     // Rotate each point around the provided point
     for p in points.iter_mut() {
@@ -60,4 +69,63 @@ pub fn orientation<T: Sub<Output = T> + Copy + Mul<Output = T>>(
     let ab = b - a;
     let ac = c - a;
     ab.cross(&ac)
+}
+
+pub fn convex_hull<const SZ: usize, T>(mut points: ArrayVec<Point2D<T>, SZ>) -> Polygon2D<SZ, T>
+where
+    T: Copy
+        + PartialOrd
+        + From<f32>
+        + Sub<Output = T>
+        + Mul<Output = T>
+        + Add<Output = T>
+        + Div<Output = T>,
+{
+    if points.len() <= 3 {
+        return Polygon2D { points };
+    }
+
+    // 1. Find the lowest point
+    let pivot_idx = points
+        .iter()
+        .enumerate()
+        .min_by(|(_, a), (_, b)| {
+            a.y.partial_cmp(&b.y)
+                .unwrap()
+                .then(a.x.partial_cmp(&b.x).unwrap())
+        })
+        .unwrap()
+        .0;
+
+    let pivot = points[pivot_idx];
+    points.swap(0, pivot_idx);
+
+    // 2. Sort points by polar angle w.r.t. pivot
+    let zero = T::from(0.0);
+    insertion_sort_by(&mut points[1..], |a, b| {
+        let o = orientation(&pivot, a, b);
+        if o == zero {
+            // Collinear: closer one comes first
+            let da = Point2D::new(a.x - pivot.x, a.y - pivot.y).hypotenuse();
+            let db = Point2D::new(b.x - pivot.x, b.y - pivot.y).hypotenuse();
+            da.partial_cmp(&db).unwrap()
+        } else {
+            o.partial_cmp(&zero).unwrap().reverse() // CCW first
+        }
+    });
+
+    // 3. Build the convex hull using a stack
+    let mut stack: ArrayVec<Point2D<T>, SZ> = ArrayVec::new();
+    stack.extend([points[0], points[1]]);
+
+    for &p in points.iter().skip(2) {
+        while stack.len() >= 2
+            && orientation(&stack[stack.len() - 2], &stack[stack.len() - 1], &p) <= zero
+        {
+            stack.pop();
+        }
+        stack.push(p);
+    }
+
+    Polygon2D { points: stack }
 }
