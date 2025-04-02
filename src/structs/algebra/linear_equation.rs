@@ -99,7 +99,7 @@ impl<T> LinearEquation<T> {
     {
         match self.expr {
             LinearExpression::Slope { a, .. } => {
-                let slope = -a;
+                let slope = -(T::from_type(1.0) / a);
                 if slope == T::from_type(0.0) {
                     Self {
                         expr: LinearExpression::Vertical(x),
@@ -184,8 +184,10 @@ impl<T> LinearEquation<T> {
 mod test {
     use crate::assert_float_equal_f32;
     use crate::structs::algebra::linear_equation::LinearEquation;
+    use crate::structs::geom::{Line2D, Point2D};
     use proptest::prelude::*;
     use proptest::proptest;
+    use std::println;
 
     #[test]
     fn test_project_onto() {
@@ -203,6 +205,37 @@ mod test {
         let (x, y) = vertical.project_onto(2.0, 1.0);
         assert_eq!(x, 1.0);
         assert_eq!(y, 1.0);
+    }
+
+    #[test]
+    fn test_orthogonal() {
+        let p1 = Point2D::new(0.82891583, -8.229318);
+        let p2 = Point2D::new(1.9410644, -16.112713);
+        let direct = LinearEquation::from_2_points(p1.as_tuple(), p2.as_tuple());
+        let start_x = 0.0;
+        let end_x = 2.0;
+        let orth1 = direct.orthogonal_at_point(p1.x, p1.y);
+        let orth_line_1 = {
+            let start_y = orth1.y(start_x).unwrap();
+            let end_y = orth1.y(end_x).unwrap();
+            Line2D::new(Point2D::new(start_x, start_y), Point2D::new(end_x, end_y))
+        };
+        let orth2 = direct.orthogonal_at_point(p2.x, p2.y);
+        let orth_line_2 = {
+            let start_y = orth2.y(start_x).unwrap();
+            let end_y = orth2.y(end_x).unwrap();
+            Line2D::new(Point2D::new(start_x, start_y), Point2D::new(end_x, end_y))
+        };
+        #[cfg(feature = "helpers")]
+        {
+            use crate::structs::geom::PrintDesmos;
+
+            let direct_line = Line2D::new(p1, p2);
+            println!("Direct line: {}", direct_line.to_string_desmos());
+            println!("Orthogonal line 1: {}", orth_line_1.to_string_desmos());
+            println!("Orthogonal line 2: {}", orth_line_2.to_string_desmos());
+        }
+        panic!()
     }
 
     #[derive(Debug)]

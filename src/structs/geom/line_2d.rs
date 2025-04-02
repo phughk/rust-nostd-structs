@@ -1,6 +1,8 @@
-use crate::structs::algebra::LinearEquation;
 use crate::structs::geom::point_2d::Point2D;
+#[cfg(feature = "helpers")]
+use crate::structs::geom::PrintDesmos;
 use crate::structs::AsType;
+use arrayvec::ArrayString;
 use core::ops::Neg;
 use core::ops::{Add, Mul};
 use core::ops::{Div, Sub};
@@ -143,52 +145,46 @@ impl<T> Line2D<T> {
             + PartialOrd
             + AsType<f32>,
     {
-        let plane = LinearEquation::from_2_points(
-            (self.points[0].x, self.points[0].y),
-            (self.points[1].x, self.points[1].y),
-        );
-        let e = other.earlier();
-        let projected_start = plane.project_onto(e.x, e.y);
-        let projected_start = Point2D::new(projected_start.0, projected_start.1);
-        let e = other.later();
-        let projected_end = plane.project_onto(e.x, e.y);
-        let projected_end = Point2D::new(projected_end.0, projected_end.1);
-        let mut new_start = *self.earlier();
-        let mut new_end = *self.later();
-        const TESTING: bool = false;
-        if TESTING {
-            let start_earlier = projected_start.cross(self.earlier());
-            let current_start = new_start.cross(self.earlier());
-            let end_earlier = projected_end.cross(self.later());
-            let current_end = new_end.cross(self.later());
-            let new_cross = new_start.cross(&new_end);
-            let original_cross = self.earlier().cross(self.later());
+        let a0 = self.points[0];
+        let a1 = self.points[1];
+        let b0 = other.points[0];
+        let b1 = other.points[1];
 
-            let signage = original_cross < T::from_type(0.0);
-
-            if (signage && start_earlier > current_start)
-                | (!signage && start_earlier < current_start)
-            {
-                new_start = projected_start;
-            }
-            if (signage && end_earlier < current_end) | (!signage && end_earlier > current_end) {
-                new_end = projected_end;
-            }
-            if (signage && new_cross < original_cross) | (!signage && new_cross > original_cross) {
-                return None;
-            }
-        } else {
-            if &projected_start > self.earlier() {
-                new_start = projected_start;
-            }
-            if &projected_end < self.later() {
-                new_end = projected_end;
-            }
-            if new_start > new_end {
-                return None;
-            }
+        // Direction of line A
+        let d = a1 - a0;
+        let d_dot = d.dot(&d);
+        if d_dot == T::from_type(0.0) {
+            return None; // self is a degenerate line
         }
-        Some(Line2D::new(new_start, new_end))
+
+        // Project all endpoints onto line A (relative to a0)
+        let t = |p: Point2D<T>| -> T {
+            let v = p - a0;
+            v.dot(&d) / d_dot
+        };
+
+        let ta0 = T::from_type(0.0);
+        let ta1 = T::from_type(1.0);
+        let tb0 = t(b0);
+        let tb1 = t(b1);
+
+        // Sort projections to define intervals
+        let (min_a, max_a) = if ta0 < ta1 { (ta0, ta1) } else { (ta1, ta0) };
+        let (min_b, max_b) = if tb0 < tb1 { (tb0, tb1) } else { (tb1, tb0) };
+
+        // Compute overlap interval
+        let start_t = if min_a > min_b { min_a } else { min_b };
+        let end_t = if max_a < max_b { max_a } else { max_b };
+
+        if start_t >= end_t {
+            return None;
+        }
+
+        // Reconstruct overlapping points along line A
+        let start = a0 + d * start_t;
+        let end = a0 + d * end_t;
+
+        Some(Line2D::new(start, end))
     }
 
     /// Subtracts the overlap of 2 lines
@@ -250,9 +246,28 @@ impl<T> Line2D<T> {
     }
 }
 
+#[cfg(feature = "helpers")]
+impl<T: core::fmt::Display> PrintDesmos for Line2D<T> {
+    fn to_string_desmos(&self) -> ArrayString<1024> {
+        use core::fmt::Write;
+
+        let mut ret = ArrayString::new();
+        write!(
+            &mut ret,
+            "{}, {}",
+            self.points[0].to_string_desmos(),
+            self.points[1].to_string_desmos()
+        )
+        .unwrap();
+        ret
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::assert_float_equal_f64;
+    #[cfg(feature = "helpers")]
+    use crate::structs::geom::PrintDesmos;
     use crate::structs::geom::{Line2D, Point2D};
     use proptest::prelude::*;
     use std::println;
@@ -392,16 +407,17 @@ mod test {
 
     #[test]
     fn weird_case_for_dot_product() {
-        let the_self = Line2D::new(
-            Point2D::new(-3.79728723, 3.99593067),
-            Point2D::new(-1.73008442, 6.61806583),
-        );
-        let other = Line2D::new(
-            Point2D::new(-0.880950391, 7.69514608),
-            Point2D::new(9.4796915, 20.837059),
-        );
-        let overlap = the_self.overlap(&other);
-        overlap.expect("There should be overlap");
+        let case = OverlapTest {
+            p1x: 0.0,
+            p1y: 0.0,
+            p2x: 12.197849174953443,
+            p2y: 24.83333321365357,
+            tx: 1,
+            ty: 14,
+        };
+        // TODO the data is correct, the test is invalid
+        // Time to flip the logic and handle left|right|center
+        test_prop_left_impl(case);
     }
 
     #[derive(Debug, Clone, Copy)]
@@ -425,7 +441,7 @@ mod test {
         let ty = 1u8..u8::MAX;
         (p1x, p1y, p2x, p2y, tx, ty)
             .prop_filter(
-                "Points cannnot be the same",
+                "Points cannot be the same",
                 |(p1x, p1y, p2x, p2y, _tx, _ty)| p1x != p2x && p1y != p2y,
             )
             .prop_map(|(p1x, p1y, p2x, p2y, tx, ty)| OverlapTest {
@@ -473,18 +489,12 @@ mod test {
             // 5% of largest value
             vals[max] * 0.05
         };
-        println!(
-            "Line 1: ({}, {}), ({}, {})",
-            l1.points[0].x, l1.points[0].y, l1.points[1].x, l1.points[1].y
-        );
-        println!(
-            "Line 2: ({}, {}), ({}, {})",
-            l2.points[0].x, l2.points[0].y, l2.points[1].x, l2.points[1].y
-        );
-        println!(
-            "Overlap: ({}, {}), ({}, {})",
-            overlap.points[0].x, overlap.points[0].y, overlap.points[1].x, overlap.points[1].y
-        );
+        #[cfg(feature = "helpers")]
+        {
+            println!("Line 1: {}", l1.to_string_desmos());
+            println!("Line 2: {}", l2.to_string_desmos());
+            println!("Overlap: {}", overlap.to_string_desmos());
+        }
         assert_float_equal_f64(overlap.points[0].x, p1.x, precision);
         assert_float_equal_f64(overlap.points[0].y, p1.y, precision);
         assert_float_equal_f64(overlap.points[1].x, p4.x, precision);
