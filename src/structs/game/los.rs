@@ -25,6 +25,9 @@ pub struct LineOfSight<const SZ: usize, T> {
     /// We use this to determine if a blocking object is within the visibility range.
     /// This prevents calculating objects behind the target, behind the source, or in an irrelevant angle.
     pub surface: Polygon2D<4, T>,
+    /// The original manhattan distance of the line of sight
+    /// We track this value to see if the line of sight was obscured at all
+    pub original_distance: T,
 }
 
 impl<const SZ: usize, T> LineOfSight<SZ, T>
@@ -83,6 +86,7 @@ where
             tracked_fields,
             target_plane: tgt_plane,
             surface,
+            original_distance: tgt_line.length_manhattan(),
         }
     }
 
@@ -175,6 +179,30 @@ where
         } else {
             Ok(())
         }
+    }
+
+    /// True, if the line of sight was at least partially blocked
+    pub fn partially_blocked(&self) -> bool
+    where
+        T: Copy
+            + Sub<Output = T>
+            + Div<Output = T>
+            + Mul<Output = T>
+            + Add<Output = T>
+            + Neg<Output = T>
+            + PartialEq
+            + PartialOrd
+            + AsType<f32>,
+    {
+        if self.tracked_fields.len() != 1 {
+            return true;
+        }
+        self.tracked_fields[0].length_manhattan() < self.original_distance
+    }
+
+    /// True if the line of sight is completely blocked
+    pub fn totally_blocked(&self) -> bool {
+        self.tracked_fields.is_empty()
     }
 }
 
