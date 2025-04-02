@@ -4,29 +4,30 @@
 use crate::structs::algebra::LinearEquation;
 use crate::structs::geom::{Line2D, Polygon2D, Shape2D};
 use crate::structs::AsType;
-use arrayvec::ArrayVec;
+use arrayvec::{ArrayString, ArrayVec};
+use core::fmt::Write;
 use core::ops::*;
 
-/// A way for tracking field of view from one shape to another.
+/// A way for tracking line of sight from one shape to another.
 ///
-/// SZ is the size of maximum number of tracked fields
+/// SZ is the size of maximum number of tracked fields of view
 /// i.e. if a field of view gets split into 2, they need to be tracked separately.
 ///
 /// When a field of view is split and there are not enough free slots, the smallest field of view is removed.
-pub struct FieldOfView<const SZ: usize, T> {
+pub struct LineOfSight<const SZ: usize, T> {
     /// The remaining field of view lines indicating remaining visibility
-    tracked_fields: ArrayVec<Line2D<T>, SZ>,
+    pub tracked_fields: ArrayVec<Line2D<T>, SZ>,
     /// The plane which we are plotting our blocking views onto
     /// It could be derived from the Polygon, but we shouldn't rely on it having that structure
     /// For example if we need to turn it into a convex hull (TODO)
-    target_plane: LinearEquation<T>,
+    pub target_plane: LinearEquation<T>,
     /// The surface from the source to the target.
     /// We use this to determine if a blocking object is within the visibility range.
     /// This prevents calculating objects behind the target, behind the source, or in an irrelevant angle.
-    surface: Polygon2D<4, T>,
+    pub surface: Polygon2D<4, T>,
 }
 
-impl<const SZ: usize, T> FieldOfView<SZ, T>
+impl<const SZ: usize, T> LineOfSight<SZ, T>
 where
     T: Copy + PartialOrd,
 {
@@ -34,8 +35,10 @@ where
     pub fn new<const SZ1: usize, S1: Shape2D<SZ1, T>, const SZ2: usize, S2: Shape2D<SZ2, T>>(
         source: &S1,
         target: &S2,
-    ) -> FieldOfView<SZ, T>
+    ) -> LineOfSight<SZ, T>
     where
+        S1: core::fmt::Debug,
+        S2: core::fmt::Debug,
         T: Copy
             + Sub<Output = T>
             + Div<Output = T>
@@ -46,6 +49,14 @@ where
             + PartialOrd
             + AsType<f32>,
     {
+        #[cfg(debug_assertions)]
+        {
+            extern crate std;
+            let mut s: ArrayString<2048> = ArrayString::new();
+            write!(s, "Source: {:?}", source).unwrap();
+            write!(s, "\nTarget: {:?}", target).unwrap();
+            std::println!("{}", s);
+        }
         let sc = source.center();
         let tc = target.center();
         let direction_plane = LinearEquation::from_2_points((sc.x, sc.y), (tc.x, tc.y));
@@ -68,7 +79,7 @@ where
 
         let mut tracked_fields = ArrayVec::new();
         tracked_fields.push(tgt_line);
-        FieldOfView {
+        LineOfSight {
             tracked_fields,
             target_plane: tgt_plane,
             surface,
@@ -121,18 +132,21 @@ where
             if other.is_some() {
                 blocked.push(other.unwrap())
             }
+            let mut add_one = true;
             match remaining {
                 None => {
                     // We must remove this field of view as it was entirely blocked
                     self.tracked_fields.remove(i);
-                    i -= 1;
+                    add_one = false;
                 }
                 Some(v) => {
                     let to_replace = self.tracked_fields.get_mut(i).unwrap();
                     *to_replace = v;
                 }
             }
-            i += 1;
+            if add_one {
+                i += 1;
+            }
         }
         // Add all remaining lines
         for blocker in blocked {
@@ -161,5 +175,55 @@ where
         } else {
             Ok(())
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::structs::game::los::LineOfSight;
+    use crate::structs::geom::{Point2D, Polygon2D};
+    use arrayvec::ArrayVec;
+
+    #[test]
+    fn test_fov_subtract_with_overflow() {
+        // Write a test that ends up with zero fov
+        // i-=1 before removing the element would result in invalid usize = -1
+        // Fixing without test currently
+    }
+
+    #[test]
+    fn test_weird_case() {
+        let source = Polygon2D {
+            points: ArrayVec::from([
+                Point2D { x: 13.7, y: -10.8 },
+                Point2D {
+                    x: 20.8,
+                    y: -2.6000004,
+                },
+                Point2D {
+                    x: 13.699999,
+                    y: -1.4000003,
+                },
+                Point2D {
+                    x: 19.599998,
+                    y: 7.999999,
+                },
+            ]),
+        };
+        let target = Polygon2D {
+            points: ArrayVec::from([
+                Point2D { x: -7.9, y: 9.2 },
+                Point2D {
+                    x: -0.8000002,
+                    y: 4.6,
+                },
+                Point2D { x: -5.5, y: 11.4 },
+                Point2D {
+                    x: 0.4000001,
+                    y: 1.5999994,
+                },
+            ]),
+        };
+        let _los_should_not_fail: LineOfSight<5, f32> = LineOfSight::new(&source, &target);
     }
 }

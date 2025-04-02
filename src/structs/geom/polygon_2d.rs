@@ -6,8 +6,7 @@ use arrayvec::ArrayVec;
 use core::ops::{Add, Div, Mul, Sub};
 
 /// An N-polygon in 2D space
-#[derive(Clone)]
-#[cfg_attr(test, derive(Debug))]
+#[derive(Clone, Debug)]
 pub struct Polygon2D<const N: usize, T> {
     /// Points of the polygon
     pub points: ArrayVec<Point2D<T>, N>,

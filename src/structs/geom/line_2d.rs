@@ -155,14 +155,38 @@ impl<T> Line2D<T> {
         let projected_end = Point2D::new(projected_end.0, projected_end.1);
         let mut new_start = *self.earlier();
         let mut new_end = *self.later();
-        if &projected_start > self.earlier() {
-            new_start = projected_start;
-        }
-        if &projected_end < self.later() {
-            new_end = projected_end;
-        }
-        if new_start.x > new_end.x {
-            return None;
+        const TESTING: bool = false;
+        if TESTING {
+            let start_earlier = projected_start.cross(self.earlier());
+            let current_start = new_start.cross(self.earlier());
+            let end_earlier = projected_end.cross(self.later());
+            let current_end = new_end.cross(self.later());
+            let new_cross = new_start.cross(&new_end);
+            let original_cross = self.earlier().cross(self.later());
+
+            let signage = original_cross < T::from_type(0.0);
+
+            if (signage && start_earlier > current_start)
+                | (!signage && start_earlier < current_start)
+            {
+                new_start = projected_start;
+            }
+            if (signage && end_earlier < current_end) | (!signage && end_earlier > current_end) {
+                new_end = projected_end;
+            }
+            if (signage && new_cross < original_cross) | (!signage && new_cross > original_cross) {
+                return None;
+            }
+        } else {
+            if &projected_start > self.earlier() {
+                new_start = projected_start;
+            }
+            if &projected_end < self.later() {
+                new_end = projected_end;
+            }
+            if new_start > new_end {
+                return None;
+            }
         }
         Some(Line2D::new(new_start, new_end))
     }
@@ -228,7 +252,10 @@ impl<T> Line2D<T> {
 
 #[cfg(test)]
 mod test {
+    use crate::assert_float_equal_f64;
     use crate::structs::geom::{Line2D, Point2D};
+    use proptest::prelude::*;
+    use std::println;
 
     #[test]
     fn test_overlap() {
@@ -361,5 +388,128 @@ mod test {
         let (sub1, sub2) = l1.subtract(&l2);
         assert_eq!(sub2, None);
         assert_eq!(sub1, None);
+    }
+
+    #[test]
+    fn weird_case_for_dot_product() {
+        let the_self = Line2D::new(
+            Point2D::new(-3.79728723, 3.99593067),
+            Point2D::new(-1.73008442, 6.61806583),
+        );
+        let other = Line2D::new(
+            Point2D::new(-0.880950391, 7.69514608),
+            Point2D::new(9.4796915, 20.837059),
+        );
+        let overlap = the_self.overlap(&other);
+        overlap.expect("There should be overlap");
+    }
+
+    #[derive(Debug, Clone, Copy)]
+    struct OverlapTest {
+        p1x: f64,
+        p1y: f64,
+        p2x: f64,
+        p2y: f64,
+        // Percentage of tx/u8::MAX
+        tx: u8,
+        // Percentage of ty/u8::MAX
+        ty: u8,
+    }
+
+    fn generate_overlap_test() -> BoxedStrategy<OverlapTest> {
+        let p1x = -30.0f64..=30.0f64;
+        let p1y = -30.0f64..=30.0f64;
+        let p2x = -30.0f64..=30.0f64;
+        let p2y = -30.0f64..=30.0f64;
+        let tx = 1u8..u8::MAX;
+        let ty = 1u8..u8::MAX;
+        (p1x, p1y, p2x, p2y, tx, ty)
+            .prop_filter(
+                "Points cannnot be the same",
+                |(p1x, p1y, p2x, p2y, _tx, _ty)| p1x != p2x && p1y != p2y,
+            )
+            .prop_map(|(p1x, p1y, p2x, p2y, tx, ty)| OverlapTest {
+                p1x,
+                p1y,
+                p2x,
+                p2y,
+                tx,
+                ty,
+            })
+            .boxed()
+    }
+
+    fn test_prop_left_impl(case: OverlapTest) {
+        let p1 = Point2D::new(case.p1x, case.p1y);
+        let p2 = Point2D::new(case.p2x, case.p2y);
+        let l1 = Line2D::new(p1, p2);
+        let dx = (p2.x - p1.x).abs();
+        let dy = (p2.y - p1.y).abs();
+        let tx = (case.tx as f64 / u8::MAX as f64) * dx;
+        let ty = (case.ty as f64 / u8::MAX as f64) * dy;
+        let p3 = Point2D::new(p1.x + tx, p1.y + ty);
+        let p4 = Point2D::new(p2.x + tx, p2.y + ty);
+        let l2 = Line2D::new(p3, p4);
+        let overlap = l1.overlap(&l2);
+        let overlap = overlap.expect("There should be overlap");
+        // Precision must be flexible
+        let precision = {
+            let vals = [
+                p1.x.abs(),
+                p1.y.abs(),
+                p2.x.abs(),
+                p2.y.abs(),
+                p3.x.abs(),
+                p3.y.abs(),
+                p4.x.abs(),
+                p4.y.abs(),
+            ];
+            let mut max = 0;
+            for i in 0..vals.len() {
+                if vals[i] > vals[max] {
+                    max = i;
+                }
+            }
+            // 5% of largest value
+            vals[max] * 0.05
+        };
+        println!(
+            "Line 1: ({}, {}), ({}, {})",
+            l1.points[0].x, l1.points[0].y, l1.points[1].x, l1.points[1].y
+        );
+        println!(
+            "Line 2: ({}, {}), ({}, {})",
+            l2.points[0].x, l2.points[0].y, l2.points[1].x, l2.points[1].y
+        );
+        println!(
+            "Overlap: ({}, {}), ({}, {})",
+            overlap.points[0].x, overlap.points[0].y, overlap.points[1].x, overlap.points[1].y
+        );
+        assert_float_equal_f64(overlap.points[0].x, p1.x, precision);
+        assert_float_equal_f64(overlap.points[0].y, p1.y, precision);
+        assert_float_equal_f64(overlap.points[1].x, p4.x, precision);
+        assert_float_equal_f64(overlap.points[1].y, p4.y, precision);
+    }
+
+    #[test]
+    fn test_prop_left_overlap_one() {
+        let case = OverlapTest {
+            p1x: 0.0,
+            p1y: 0.0,
+            p2x: 32.36723,
+            p2y: -61.939075,
+            tx: 1,
+            ty: 1,
+        };
+        test_prop_left_impl(case);
+    }
+
+    proptest! {
+
+        #[test]
+        fn test_prop_left( case in generate_overlap_test() ) {
+            test_prop_left_impl(case);
+        }
+
     }
 }

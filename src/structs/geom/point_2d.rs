@@ -110,4 +110,15 @@ impl<T> Point2D<T> {
     {
         self.x * other.y - self.y * other.x
     }
+
+    /// Translate the point by a given distance
+    pub fn translate(&self, dx: T, dy: T) -> Self
+    where
+        T: Add<Output = T> + Copy,
+    {
+        Point2D {
+            x: self.x + dx,
+            y: self.y + dy,
+        }
+    }
 }

@@ -182,6 +182,7 @@ impl<T> LinearEquation<T> {
 
 #[cfg(test)]
 mod test {
+    use crate::assert_float_equal_f32;
     use crate::structs::algebra::linear_equation::LinearEquation;
     use proptest::prelude::*;
     use proptest::proptest;
@@ -290,16 +291,8 @@ mod test {
         let (p1x, p1y) = original.project_onto(ox1, oy1);
         let (p2x, p2y) = original.project_onto(ox2, oy2);
         // Projected points should be identical
-        assert!(float_equal(p1x, p2x, 0.001), "{} != {}", p1x, p2x);
-        assert!(float_equal(p1y, p2y, 0.001), "{} != {}", p1y, p2y);
-    }
-
-    fn float_equal(left: f32, right: f32, precision: f32) -> bool {
-        if left.is_nan() || right.is_nan() {
-            return left.is_nan() && right.is_nan();
-        }
-        let diff = (left - right).abs();
-        diff < precision
+        assert_float_equal_f32(p1x, p2x, 0.001);
+        assert_float_equal_f32(p1y, p2y, 0.001);
     }
 
     #[test]
