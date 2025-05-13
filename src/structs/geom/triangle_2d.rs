@@ -112,6 +112,10 @@ impl Shape2D<3, f32> for Triangle2D<f32> {
         todo!()
     }
 
+    fn as_convex_hull(self) -> Polygon2D<3, f32> {
+        todo!()
+    }
+
     fn convex_hull_with_other_shape<
         const NEW_SZ: usize,
         const OTHER_SZ: usize,
@@ -221,6 +225,10 @@ impl Shape2D<3, f64> for Triangle2D<f64> {
     }
 
     fn axis_aligned_bounding_box(&self) -> Polygon2D<4, f64> {
+        todo!()
+    }
+
+    fn as_convex_hull(self) -> Polygon2D<3, f64> {
         todo!()
     }
 

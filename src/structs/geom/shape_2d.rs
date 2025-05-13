@@ -29,6 +29,9 @@ pub trait Shape2D<const SZ: usize, T> {
     /// Axis-aligned bounding box of the shape
     fn axis_aligned_bounding_box(&self) -> Polygon2D<4, T>;
 
+    /// Turns this polygon into a convex hull
+    fn as_convex_hull(self) -> Polygon2D<SZ, T>;
+
     /// Convex hull from 2 shapes
     fn convex_hull_with_other_shape<
         const NEW_SZ: usize,
@@ -38,6 +41,30 @@ pub trait Shape2D<const SZ: usize, T> {
         &self,
         other_shape: SHAPE,
     ) -> Polygon2D<NEW_SZ, T>;
+
+    /// True, if this shape overlaps with another shape
+    fn overlaps<OtherShape: Shape2D<OtherSz, T>, const OtherSz: usize>(
+        &self,
+        other_shape: &OtherShape,
+    ) -> bool {
+        let center = self.center();
+        let mut radius = 0.0;
+        for point in self.points() {
+            let dist = center.distance(point);
+            if dist < radius {
+                radius = dist;
+            }
+        }
+        // Now check distance of other shape to this shape
+        for point in other_shape.points() {
+            center.distance_squared()
+            let dist = center.distance(point);
+            if dist < radius {
+                return true;
+            }
+        }
+        false
+    }
 
     /// Points of the shape
     fn points(&self) -> &[Point2D<T>];

@@ -60,6 +60,19 @@ impl<T> Point2D<T> {
         x + y
     }
 
+    pub fn distance_chebyshev(&self, other: &Self) -> T
+    where
+        T: Mul<Output = T> + Add<Output = T> + Sub<Output = T> + Copy + PartialOrd,
+    {
+        let dx = self.x - other.x;
+        let dy = self.y - other.y;
+        if dx > dy {
+            dx + 0.5 * dy
+        } else {
+            dy
+        }
+    }
+
     /// Hypotenuse of the point.
     /// The hypotenuse is the distance of a point from (0,0)
     pub fn hypotenuse(&self) -> T
