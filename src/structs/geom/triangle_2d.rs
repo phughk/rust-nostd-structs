@@ -1,5 +1,5 @@
 use crate::structs::geom::point_2d::Point2D;
-use crate::structs::geom::{Line2D, Polygon2D, Shape2D};
+use crate::structs::geom::{Line2D, Shape2D};
 use arrayvec::ArrayVec;
 
 /// A triangle in 2D space
@@ -25,28 +25,12 @@ impl<T: PartialEq> PartialEq for Triangle2D<T> {
 }
 
 impl Shape2D<3, f32> for Triangle2D<f32> {
-    fn rotate_deg(mut self, point: Point2D<f32>, degrees: f32) -> Self {
-        self.rotate_rad_mut(point, degrees);
-        self
-    }
-
     fn rotate_deg_mut(&mut self, point2d: Point2D<f32>, degrees: f32) {
         super::misc::rotate_deg_mut(&mut self.points, point2d, degrees);
     }
 
-    fn rotate_rad(self, point2d: Point2D<f32>, radians: f32) -> Self {
+    fn rotate_rad_mut(&mut self, _point2d: Point2D<f32>, _radians: f32) {
         todo!()
-    }
-
-    fn rotate_rad_mut(&mut self, point2d: Point2D<f32>, radians: f32) {
-        todo!()
-    }
-
-    fn surface(&self) -> f32 {
-        let a = &self.points[0];
-        let b = &self.points[1];
-        let c = &self.points[2];
-        0.5 * ((a.x * (b.y - c.y)) + (b.x * (c.y - a.y)) + (c.x * (a.y - b.y))).abs()
     }
 
     fn center(&self) -> Point2D<f32> {
@@ -56,9 +40,9 @@ impl Shape2D<3, f32> for Triangle2D<f32> {
         Point2D::new(cx, cy)
     }
 
-    fn closest_point(&self, point: Point2D<f32>) -> Point2D<f32> {
+    fn closest_point(&self, point: &Point2D<f32>) -> Point2D<f32> {
         if self.point_in_shape(point) {
-            return point;
+            return *point;
         }
 
         // Check edges
@@ -80,14 +64,14 @@ impl Shape2D<3, f32> for Triangle2D<f32> {
         }
     }
 
-    fn point_in_shape(&self, point: Point2D<f32>) -> bool {
+    fn point_in_shape(&self, point: &Point2D<f32>) -> bool {
         let a = &self.points[0];
         let b = &self.points[1];
         let c = &self.points[2];
 
         let v0 = c - a;
         let v1 = b - a;
-        let v2 = &point - a;
+        let v2 = point - a;
 
         let dot00 = v0.dot(&v0);
         let dot01 = v0.dot(&v1);
@@ -106,25 +90,6 @@ impl Shape2D<3, f32> for Triangle2D<f32> {
 
         let point_in_triangle = u >= 0.0 && v >= 0.0 && (u + v) <= 1.0;
         point_in_triangle
-    }
-
-    fn axis_aligned_bounding_box(&self) -> Polygon2D<4, f32> {
-        todo!()
-    }
-
-    fn as_convex_hull(self) -> Polygon2D<3, f32> {
-        todo!()
-    }
-
-    fn convex_hull_with_other_shape<
-        const NEW_SZ: usize,
-        const OTHER_SZ: usize,
-        SHAPE: Shape2D<OTHER_SZ, f32>,
-    >(
-        &self,
-        other_shape: SHAPE,
-    ) -> Polygon2D<NEW_SZ, f32> {
-        todo!()
     }
 
     fn points(&self) -> &[Point2D<f32>] {
@@ -141,28 +106,12 @@ impl Shape2D<3, f32> for Triangle2D<f32> {
 }
 
 impl Shape2D<3, f64> for Triangle2D<f64> {
-    fn rotate_deg(mut self, point2d: Point2D<f64>, degrees: f64) -> Self {
-        self.rotate_rad_mut(point2d, degrees);
-        self
-    }
-
     fn rotate_deg_mut(&mut self, point2d: Point2D<f64>, degrees: f64) {
         super::misc::rotate_deg_mut(&mut self.points, point2d, degrees);
     }
 
-    fn rotate_rad(self, point2d: Point2D<f64>, radians: f64) -> Self {
+    fn rotate_rad_mut(&mut self, _point2d: Point2D<f64>, _radians: f64) {
         todo!()
-    }
-
-    fn rotate_rad_mut(&mut self, point2d: Point2D<f64>, radians: f64) {
-        todo!()
-    }
-
-    fn surface(&self) -> f64 {
-        let a = &self.points[0];
-        let b = &self.points[1];
-        let c = &self.points[2];
-        0.5 * ((a.x * (b.y - c.y)) + (b.x * (c.y - a.y)) + (c.x * (a.y - b.y))).abs()
     }
 
     fn center(&self) -> Point2D<f64> {
@@ -172,9 +121,9 @@ impl Shape2D<3, f64> for Triangle2D<f64> {
         Point2D::new(cx, cy)
     }
 
-    fn closest_point(&self, point: Point2D<f64>) -> Point2D<f64> {
-        if self.point_in_shape(point) {
-            return point;
+    fn closest_point(&self, point: &Point2D<f64>) -> Point2D<f64> {
+        if self.point_in_shape(&point) {
+            return *point;
         }
 
         // Check edges
@@ -196,14 +145,14 @@ impl Shape2D<3, f64> for Triangle2D<f64> {
         }
     }
 
-    fn point_in_shape(&self, point: Point2D<f64>) -> bool {
+    fn point_in_shape(&self, point: &Point2D<f64>) -> bool {
         let a = &self.points[0];
         let b = &self.points[1];
         let c = &self.points[2];
 
         let v0 = c - a;
         let v1 = b - a;
-        let v2 = &point - a;
+        let v2 = point - a;
 
         let dot00 = v0.dot(&v0);
         let dot01 = v0.dot(&v1);
@@ -222,25 +171,6 @@ impl Shape2D<3, f64> for Triangle2D<f64> {
 
         let point_in_triangle = u >= 0.0 && v >= 0.0 && (u + v) <= 1.0;
         point_in_triangle
-    }
-
-    fn axis_aligned_bounding_box(&self) -> Polygon2D<4, f64> {
-        todo!()
-    }
-
-    fn as_convex_hull(self) -> Polygon2D<3, f64> {
-        todo!()
-    }
-
-    fn convex_hull_with_other_shape<
-        const NEW_SZ: usize,
-        const OTHER_SZ: usize,
-        SHAPE: Shape2D<OTHER_SZ, f64>,
-    >(
-        &self,
-        other_shape: SHAPE,
-    ) -> Polygon2D<NEW_SZ, f64> {
-        todo!()
     }
 
     fn points(&self) -> &[Point2D<f64>] {
